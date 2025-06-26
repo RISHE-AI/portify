@@ -1,0 +1,88 @@
+:root {
+  /* Light theme */
+  --bg-secondary-light: #ffffff;
+  --text-primary-light: #2d3748;
+  --text-secondary-light: #4a5568;
+  --skill-border-color-light: #e2e8f0;
+  --accent-color-light: #000000;
+  --shadow-color-light: rgba(0, 0, 0, 0.08);
+  --shadow-hover-color-light: rgba(0, 0, 0, 0.12);
+
+  /* Dark theme */
+  --bg-secondary-dark: #232526;
+  --text-primary-dark: #f7fafc;
+  --text-secondary-dark: #cbd5e0;
+  --skill-border-color-dark: #4a5568;
+  --accent-color-dark: #ffffff;
+  --shadow-color-dark: rgba(0, 0, 0, 0.2);
+  --shadow-hover-color-dark: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] {
+  --bg-secondary: var(--bg-secondary-light);
+  --text-primary: var(--text-primary-light);
+  --text-secondary: var(--text-secondary-light);
+  --skill-border-color: var(--skill-border-color-light);
+  --accent-color: var(--accent-color-light);
+  --shadow-color: var(--shadow-color-light);
+  --shadow-hover-color: var(--shadow-hover-color-light);
+}
+
+[data-theme="dark"] {
+  --bg-secondary: var(--bg-secondary-dark);
+  --text-primary: var(--text-primary-dark);
+  --text-secondary: var(--text-secondary-dark);
+  --skill-border-color: var(--skill-border-color-dark);
+  --accent-color: var(--accent-color-dark);
+  --shadow-color: var(--shadow-color-dark);
+  --shadow-hover-color: var(--shadow-hover-color-dark);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 100px;
+  padding: 0 20px;
+  background: var(--bg-secondary, #fff);
+  transition: background 0.3s;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] .container {
+  background: #232526;
+}
+
+.achievementsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.achievementCard {
+  background: var(--bg-secondary, #fff);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 24px 32px;
+  min-width: 260px;
+  max-width: 350px;
+  border: 2px solid var(--skill-border-color, #e2e8f0);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.achievementCard:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.achievementCard h3 {
+  margin-bottom: 10px;
+  color: var(--accent-color, #000000);
+}
+
+.achievementCard p {
+  color: var(--text-secondary, #555);
+}

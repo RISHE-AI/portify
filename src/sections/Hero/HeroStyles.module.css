@@ -1,9 +1,23 @@
-.container {
+/* HeroStyles.module.css */
+:root {
+  --button-text: #fff; /* White text by default (light theme) */
+  --button-bg: #fff;   /* White background */
+  --button-hover: #f0f0f0; /* Slightly off-white for hover */
+  --accent-color: #0987f2;
+  --accent-hover: #9e9e9e;
+}
 
+[data-theme="dark"] {
+  --button-text: #222; /* Dark text for dark theme */
+  --button-bg: #fff;    /* Still white background in dark mode */
+  --button-hover: #f0f0f0; /* Same hover in dark mode */
+}
+
+/* Rest of your existing CSS remains the same */
+.container {
   display: flex;
   align-items: center;
-
-  padding-top: 100px; /* Added padding top for heading visibility */
+  padding-top: 20px;
   position: relative;
   overflow: hidden;
   opacity: 0;
@@ -29,6 +43,9 @@
 .textContent {
   flex: 1;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .name {
@@ -39,10 +56,15 @@
   color: var(--text-primary);
 }
 
-.lastName {
-  display: inline-block;
+.Name {
   color: var(--accent-color);
-  animation: slideInRight 0.8s ease-out;
+}
+
+.hello {
+  display: block;
+  color: var(--text-secondary);
+  padding-top: 100px;
+  margin-bottom: -75px;
 }
 
 .roleContainer {
@@ -68,10 +90,11 @@
 }
 
 .description {
-  font-size: 20px;
+  font-size: clamp(1rem, 3vw, 1.25rem);
   line-height: 1.6;
   color: var(--text-secondary);
   max-width: 600px;
+  margin-bottom: 2rem;
 }
 
 .buttons {
@@ -79,7 +102,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
 .resumeLink {
@@ -88,10 +111,8 @@
 
 .resumeBtn {
   padding: 0.8rem 2rem;
-  background: var(--accent-color);
-  color: var(
-    --button-text
-  ) !important; /* Use CSS variable and enforce with !important */
+  background: var(--button-bg);
+  color: var(--button-text) !important;
   border: none;
   border-radius: 50px;
   font-size: 1rem;
@@ -105,8 +126,9 @@
 }
 
 .resumeBtn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translatey(-3px);
+  box-shadow: 0 6px 12px rgba(255, 255, 255, 0.15);
+  background: var(--accent-hover);
 }
 
 .downloadIcon {
@@ -130,12 +152,19 @@
 .socialIcon {
   width: 32px;
   height: 32px;
+  transition: transform 0.3s ease;
 }
 
+.socialLink:hover .socialIcon {
+  transform: scale(1.1);
+}
+
+/* Image Container Styles */
 .imageContainer {
   position: relative;
   width: 250px;
   height: 250px;
+  margin: 0 auto;
 }
 
 .profileImage {
@@ -145,12 +174,29 @@
   border-radius: 20px;
   position: relative;
   z-index: 2;
-
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  transition: transform 0.5s ease;
+  transition: all 0.5s ease;
+  border: 2px solid transparent;
 }
 
 .profileImage:hover {
+  transform: scale(1.05);
+}
+
+.decoration {
+  position: absolute;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  border: 2px solid var(--accent-color);
+  border-radius: 24px;
+  top: -6px;
+  left: -6px;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.profileImage:hover + .decoration {
+  border-color: var(--accent-hover);
   transform: scale(1.05);
 }
 
@@ -181,17 +227,6 @@
   height: 20px;
 }
 
-.decoration {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 2px solid var(--accent-color);
-  border-radius: 20px;
-  top: 15px;
-  left: 15px;
-  z-index: 1;
-}
-
 /* Animations */
 @keyframes slideInLeft {
   from {
@@ -216,8 +251,7 @@
 }
 
 @keyframes blink {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
   }
   50% {
@@ -231,6 +265,7 @@
     flex-direction: row;
     align-items: center;
     gap: 5rem;
+    padding: 0 2rem;
   }
 
   .textContent {
@@ -257,5 +292,9 @@
   .imageContainer {
     width: 350px;
     height: 350px;
+  }
+  
+  .heroContent {
+    gap: 7rem;
   }
 }

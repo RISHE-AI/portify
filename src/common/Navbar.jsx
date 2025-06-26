@@ -10,7 +10,8 @@ function Navbar() {
         <li><NavLink to="/resume" className={({ isActive }) => isActive ? styles.activeLink : styles.link}>Resume</NavLink></li>
         <li><NavLink to="/skills" className={({ isActive }) => isActive ? styles.activeLink : styles.link}>Skills</NavLink></li>
         <li><NavLink to="/projects" className={({ isActive }) => isActive ? styles.activeLink : styles.link}>Projects</NavLink></li>
-        <li><NavLink to="/contact" className={({ isActive }) => isActive ? styles.activeLink : styles.link}>Contact Us</NavLink></li>
+        <li><NavLink to="/achievements" className={({ isActive }) => isActive ? styles.activeLink : styles.link}>Achievements</NavLink></li>
+        <li><NavLink to="/contact" className={({ isActive }) => isActive ? styles.activeLink : styles.link}>Contact</NavLink></li>
       </ul>
     </nav>
   );

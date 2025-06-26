@@ -11,34 +11,38 @@ function Skills() {
   return (
     <section id="skills" className={styles.container}>
       <h1 className="sectionTitle">Skills</h1>
-      <h3>Languages</h3>
-      <div className={styles.skillList}>
-        <SkillList src={checkMarkIcon} skill="HTML" />
-        <SkillList src={checkMarkIcon} skill="CSS" />
-        <SkillList src={checkMarkIcon} skill="JavaScript" />
-        <SkillList src={checkMarkIcon} skill="Java" />
-        
-        <SkillList src={checkMarkIcon} skill="React" />
-      </div>
-      <hr />
-      <h3>Web Developent</h3>
-      <div className={styles.skillList}>
-        <SkillList src={checkMarkIcon} skill="React" />
-        <SkillList src={checkMarkIcon} skill="Node" />
-        <SkillList src={checkMarkIcon} skill="BootStrap" />
-        <SkillList src={checkMarkIcon} skill="Tailwind CSS" />
-        <SkillList src={checkMarkIcon} skill="SQL" />
-        <SkillList src={checkMarkIcon} skill="MongoDB" />
-    
-     
-      </div>
-      <hr />
-      <h3>Other Tools</h3>
+      
+      <div className={styles.skillsGrid}>
+        <div className={styles.skillCategory}>
+          <h3>Technical Skills</h3>
+          <ul className={styles.skillList}>
+            <SkillList src={checkMarkIcon} skill="HTML" />
+            <SkillList src={checkMarkIcon} skill="CSS" />
+            <SkillList src={checkMarkIcon} skill="JavaScript" />
+            <SkillList src={checkMarkIcon} skill="Java" />
+            <SkillList src={checkMarkIcon} skill="React" />
+          </ul>
+        </div>
 
-      <div className={styles.skillList}>
-        <SkillList src={checkMarkIcon} skill="Git" />
-        <SkillList src={checkMarkIcon} skill="GitHub" />
-        <SkillList src={checkMarkIcon} skill="Canva" />
+        <div className={styles.skillCategory}>
+          <h3>Tools</h3>
+          <ul className={styles.skillList}>
+            <SkillList src={checkMarkIcon} skill="Git" />
+            <SkillList src={checkMarkIcon} skill="GitHub" />
+            <SkillList src={checkMarkIcon} skill="MySQL" />
+            <SkillList src={checkMarkIcon} skill="MongoDB" />
+            <SkillList src={checkMarkIcon} skill="Canva" />
+          </ul>
+        </div>
+
+        <div className={styles.skillCategory}>
+          <h3>Languages</h3>
+          <ul className={styles.skillList}>
+            <SkillList src={checkMarkIcon} skill="English" />
+            <SkillList src={checkMarkIcon} skill="Tamil" />
+            <SkillList src={checkMarkIcon} skill="Hindi" />
+          </ul>
+        </div>
       </div>
     </section>
   );

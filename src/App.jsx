@@ -7,6 +7,7 @@ import Projects from './sections/Projects/Projects';
 import Skills from './sections/Skills/Skills';
 import Navbar from './common/Navbar';
 import Resume from './sections/Resume/Resume';
+import Achievements from './sections/Achievements/Achievements';
 
 function App() {
   
@@ -21,12 +22,14 @@ function App() {
             <Hero />
             <Skills />
             <Projects />
+            <Achievements />
             <Contact />
           </>
         } />
         <Route path="/resume" element={<Resume />} />
         <Route path="/skills" element={<Skills />} />
         <Route path="/projects" element={<Projects />} />
+        <Route path="/achievements" element={<Achievements />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>
     
