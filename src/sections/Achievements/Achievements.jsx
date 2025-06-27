@@ -6,7 +6,7 @@ import fullstackCertImg from '../../assets/fullstack-cert.png';*/
 function Achievements() {
   return (
     <section id="achievements" className={styles.container}>
-      <h1 className="sectionTitle">Achievements</h1>
+      <h1 className="sectionTitle">MyAchievements</h1>
       <div className={styles.achievementsList}>
         <div className={styles.achievementCard}>
           {/* <img src={hackathonImg} alt="Hackathon Winner" className={styles.achievementImg} /> */}
