@@ -68,4 +68,21 @@
   .logo {
     font-size: 1.3rem;
   }
+
+  /* Existing styles... */
+
+.menuIcon {
+  display: none;
+  cursor: pointer;
+  z-index: 1100;
+}
+
+.navLinks {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  margin-right: 2.5rem;
+}
+
 }
