@@ -3,7 +3,6 @@ import C19 from '../../assets/c19.png';
 import Travel from '../../assets/travel.png';
 import Portfolio from '../../assets/portfolio.png';
 import ProjectCard from '../../common/ProjectCard';
-
 function Projects() {
   return (
     <section id="projects" className={styles.container}>
@@ -12,7 +11,7 @@ function Projects() {
        
         <ProjectCard
           src={Travel}
-          link="#"
+          link to="/"
           h3="TRAVEL INFO WEBSITE"
           p="A MERN Stack Travel Information Website"
         />

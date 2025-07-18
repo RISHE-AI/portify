@@ -5,7 +5,7 @@
   margin-top: 120PX;
 
   img {
-    max-width: 250px;
+    max-width: 550px;
     align-self: center;
     background-color: var(--project-card-bg);
     border-radius: 20px;
@@ -21,6 +21,7 @@
 
   a:hover {
     transform: scale(1.05);
+    transform: matrix3d(65);
   }
 }
 
