@@ -51,7 +51,7 @@
 .link:hover,
 .link:focus {
   background: #e3e8ff;
-  color: #3949ab;
+  color: #000000;
   box-shadow: 0 2px 8px rgba(57, 73, 171, 0.08);
   outline: none;
 }
