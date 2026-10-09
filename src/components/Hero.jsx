@@ -22,22 +22,24 @@ function Hero({ profile }) {
   };
 
   return (
-    <section id="hero" className="py-5" style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', paddingTop: 'clamp(7.5rem, 15vh, 9rem)' }}>
-      <div className="container py-lg-4">
+    <section id="hero" className="hero-section">
+      <div className="container py-2 py-lg-4">
         <div className="row align-items-center gy-5">
           {/* Left Column: Intro & Call-to-actions */}
           <div className="col-lg-7 text-center text-lg-start animate-fade-in">
             <div
-              className="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill border mb-4"
+              className="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill border mb-4 mt-2 mt-md-0"
               style={{
                 backgroundColor: 'var(--accent-soft)',
                 borderColor: 'var(--border-color)',
-                fontSize: '0.84rem',
-                color: 'var(--text-secondary)'
+                fontSize: '0.82rem',
+                color: 'var(--text-secondary)',
+                maxWidth: '100%',
+                lineHeight: 1.4
               }}
             >
               <span
-                className="rounded-circle pulse-glow"
+                className="rounded-circle pulse-glow flex-shrink-0"
                 style={{
                   width: '8px',
                   height: '8px',

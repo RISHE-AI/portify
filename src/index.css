@@ -94,6 +94,24 @@ button {
   background: var(--accent-primary);
 }
 
+/* Responsive Hero Section (Guarantees full clearance below fixed navbar on mobile & desktop) */
+.hero-section {
+  position: relative;
+  width: 100%;
+  padding-top: 100px; /* 60px navbar + 40px clear breathing room on mobile */
+  padding-bottom: 3.5rem;
+}
+
+@media (min-width: 992px) {
+  .hero-section {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    padding-top: 110px;
+    padding-bottom: 4rem;
+  }
+}
+
 /* Glassmorphism & Bootstrap Integration Utilities */
 .glass-card {
   background: var(--bg-card) !important;

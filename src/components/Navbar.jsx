@@ -41,7 +41,7 @@ function Navbar() {
 
   return (
     <header
-      className={`fixed-top transition-all ${scrolled ? 'shadow-sm py-2' : 'py-3'}`}
+      className={`fixed-top transition-all ${scrolled ? 'shadow-sm py-2' : 'py-2 py-md-3'}`}
       style={{
         backgroundColor: scrolled ? 'var(--nav-bg)' : 'rgba(0, 0, 0, 0.65)',
         backdropFilter: 'blur(16px)',
