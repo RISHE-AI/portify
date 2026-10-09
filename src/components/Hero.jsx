@@ -27,29 +27,6 @@ function Hero({ profile }) {
         <div className="row align-items-center gy-5">
           {/* Left Column: Intro & Call-to-actions */}
           <div className="col-lg-7 text-center text-lg-start animate-fade-in">
-            <div
-              className="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill border mb-4 mt-2 mt-md-0"
-              style={{
-                backgroundColor: 'var(--accent-soft)',
-                borderColor: 'var(--border-color)',
-                fontSize: '0.82rem',
-                color: 'var(--text-secondary)',
-                maxWidth: '100%',
-                lineHeight: 1.4
-              }}
-            >
-              <span
-                className="rounded-circle pulse-glow flex-shrink-0"
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  backgroundColor: '#10b981',
-                  boxShadow: '0 0 8px #10b981'
-                }}
-              ></span>
-              <span>{pData.statusText || 'Open for Internships & AI / Full-Stack Opportunities'}</span>
-            </div>
-
             <h1 className="display-4 fw-bold mb-2 tracking-tight" style={{ color: 'var(--text-primary)', lineHeight: 1.15 }}>
               Hi, I&apos;m <span style={{ color: 'var(--accent-primary)' }}>{pData.name || 'Rishe S'}</span>
             </h1>
