@@ -5,6 +5,8 @@ import portfolioImg from '../assets/portfolio.png';
 
 function ExperienceEducation({ experience = [], education = [] }) {
   const [expImageIndices, setExpImageIndices] = useState({});
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchCurrentX, setTouchCurrentX] = useState(0);
 
   const defaultExperience = [
     {
@@ -56,7 +58,7 @@ function ExperienceEducation({ experience = [], education = [] }) {
   };
 
   const handleNextExpImage = (e, expId, slideLength) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     setExpImageIndices((prev) => ({
       ...prev,
       [expId]: ((prev[expId] || 0) + 1) % slideLength
@@ -64,11 +66,34 @@ function ExperienceEducation({ experience = [], education = [] }) {
   };
 
   const handlePrevExpImage = (e, expId, slideLength) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     setExpImageIndices((prev) => ({
       ...prev,
       [expId]: ((prev[expId] || 0) - 1 + slideLength) % slideLength
     }));
+  };
+
+  const handleTouchStart = (e) => {
+    if (!e.touches || e.touches.length === 0) return;
+    setTouchStartX(e.touches[0].clientX);
+    setTouchCurrentX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!e.touches || e.touches.length === 0) return;
+    setTouchCurrentX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (expId, slideCount) => {
+    const deltaX = touchStartX - touchCurrentX;
+    const minSwipeDistance = 40;
+    if (deltaX > minSwipeDistance && slideCount > 1) {
+      handleNextExpImage(null, expId, slideCount);
+    } else if (deltaX < -minSwipeDistance && slideCount > 1) {
+      handlePrevExpImage(null, expId, slideCount);
+    }
+    setTouchStartX(0);
+    setTouchCurrentX(0);
   };
 
   return (
@@ -107,13 +132,23 @@ function ExperienceEducation({ experience = [], education = [] }) {
                     {/* Work Experience Image Carousel Banner */}
                     {slides.length > 0 && (
                       <div
-                        className="position-relative overflow-hidden"
-                        style={{ height: '250px', backgroundColor: 'var(--bg-secondary)' }}
+                        className="position-relative overflow-hidden user-select-none"
+                        style={{
+                          height: '250px',
+                          backgroundColor: 'var(--bg-secondary)',
+                          touchAction: 'pan-y',
+                          cursor: slides.length > 1 ? 'grab' : 'default'
+                        }}
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={() => handleTouchEnd(exp.id, slides.length)}
                       >
                         <img
                           src={slides[activeSlideIdx]}
                           alt={`${exp.role} work preview`}
                           className="w-100 h-100 object-fit-cover"
+                          style={{ pointerEvents: 'none', userSelect: 'none' }}
+                          draggable={false}
                         />
 
                         {/* Slide Navigation Controls */}

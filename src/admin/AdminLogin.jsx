@@ -5,8 +5,8 @@ import { api, setAuthToken } from '../services/api';
 import styles from './AdminLogin.module.css';
 
 function AdminLogin() {
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ function AdminLogin() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Admin username"
+                placeholder="Enter admin username"
                 required
                 className={styles.input}
               />
@@ -76,7 +76,7 @@ function AdminLogin() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter admin password"
                 required
                 className={styles.input}
               />
@@ -86,10 +86,6 @@ function AdminLogin() {
           <button type="submit" disabled={loading} className={styles.loginBtn}>
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>
-
-          <div className={styles.credentialsHint}>
-            <span>Default Admin: <strong>admin</strong> / <strong>admin123</strong></span>
-          </div>
         </form>
       </div>
     </div>

@@ -9,6 +9,8 @@ function Projects({ projects = [] }) {
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedProject, setSelectedProject] = useState(null);
   const [cardImageIndices, setCardImageIndices] = useState({});
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchCurrentX, setTouchCurrentX] = useState(0);
 
   const categories = ['All', 'AI & ML', 'Full Stack Web'];
 
@@ -71,7 +73,7 @@ function Projects({ projects = [] }) {
   };
 
   const handleCardNextImage = (e, projId, slideLength) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     setCardImageIndices((prev) => ({
       ...prev,
       [projId]: ((prev[projId] || 0) + 1) % slideLength
@@ -79,11 +81,34 @@ function Projects({ projects = [] }) {
   };
 
   const handleCardPrevImage = (e, projId, slideLength) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     setCardImageIndices((prev) => ({
       ...prev,
       [projId]: ((prev[projId] || 0) - 1 + slideLength) % slideLength
     }));
+  };
+
+  const handleTouchStart = (e) => {
+    if (!e.touches || e.touches.length === 0) return;
+    setTouchStartX(e.touches[0].clientX);
+    setTouchCurrentX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!e.touches || e.touches.length === 0) return;
+    setTouchCurrentX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (projId, slideCount) => {
+    const deltaX = touchStartX - touchCurrentX;
+    const minSwipeDistance = 40;
+    if (deltaX > minSwipeDistance && slideCount > 1) {
+      handleCardNextImage(null, projId, slideCount);
+    } else if (deltaX < -minSwipeDistance && slideCount > 1) {
+      handleCardPrevImage(null, projId, slideCount);
+    }
+    setTouchStartX(0);
+    setTouchCurrentX(0);
   };
 
   return (
@@ -122,12 +147,25 @@ function Projects({ projects = [] }) {
             return (
               <div key={proj.id} className="col-lg-4 col-md-6 animate-fade-in" style={{ animationDelay: `${idx * 0.1}s` }}>
                 <div className="card glass-card h-100 border-0 overflow-hidden d-flex flex-column">
-                  {/* Card Image Banner with Mini Slide Controls */}
-                  <div className="position-relative overflow-hidden" style={{ height: '210px', backgroundColor: 'var(--bg-secondary)' }}>
+                  {/* Card Image Banner with Mini Slide Controls & Finger Swipe */}
+                  <div
+                    className="position-relative overflow-hidden user-select-none"
+                    style={{
+                      height: '210px',
+                      backgroundColor: 'var(--bg-secondary)',
+                      touchAction: 'pan-y',
+                      cursor: slides.length > 1 ? 'grab' : 'default'
+                    }}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={() => handleTouchEnd(proj.id, slides.length)}
+                  >
                     <img
                       src={slides[activeSlideIdx]}
                       alt={`${proj.title} slide ${activeSlideIdx + 1}`}
                       className="w-100 h-100 object-fit-cover"
+                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+                      draggable={false}
                     />
 
                     {/* Category & Featured Badge */}
@@ -329,11 +367,23 @@ function Projects({ projects = [] }) {
               {selectedProject.title}
             </h2>
 
-            <div className="rounded-3 overflow-hidden mb-3" style={{ height: '240px' }}>
+            <div
+              className="rounded-3 overflow-hidden mb-3 user-select-none position-relative"
+              style={{
+                height: '240px',
+                touchAction: 'pan-y',
+                cursor: getProjectSlides(selectedProject).length > 1 ? 'grab' : 'default'
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={() => handleTouchEnd(selectedProject.id, getProjectSlides(selectedProject).length)}
+            >
               <img
                 src={getProjectSlides(selectedProject)[cardImageIndices[selectedProject.id] || 0]}
                 alt={selectedProject.title}
                 className="w-100 h-100 object-fit-cover"
+                style={{ pointerEvents: 'none', userSelect: 'none' }}
+                draggable={false}
               />
             </div>
 

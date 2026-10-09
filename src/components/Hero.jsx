@@ -22,7 +22,7 @@ function Hero({ profile }) {
   };
 
   return (
-    <section id="hero" className="py-5" style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', paddingTop: '6rem' }}>
+    <section id="hero" className="py-5" style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', paddingTop: 'clamp(7.5rem, 15vh, 9rem)' }}>
       <div className="container py-lg-4">
         <div className="row align-items-center gy-5">
           {/* Left Column: Intro & Call-to-actions */}
@@ -145,13 +145,14 @@ function Hero({ profile }) {
           </div>
 
           {/* Right Column: Avatar Card with Dynamic Floating Stat Badges */}
-          <div className="col-lg-5 d-flex justify-content-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="position-relative" style={{ width: '100%', maxWidth: '360px' }}>
+          <div className="col-lg-5 d-flex flex-column align-items-center justify-content-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="position-relative mx-auto" style={{ width: '100%', maxWidth: '340px' }}>
               {/* Profile Image Frame */}
               <div
-                className="overflow-hidden rounded-4 border shadow-sm"
+                className="overflow-hidden rounded-4 border shadow-sm mx-auto"
                 style={{
                   aspectRatio: '1/1',
+                  maxWidth: '300px',
                   backgroundColor: 'var(--bg-secondary)',
                   borderColor: 'var(--border-color)',
                   boxShadow: 'var(--card-hover-shadow)'
@@ -165,9 +166,9 @@ function Hero({ profile }) {
                 />
               </div>
 
-              {/* Floating Badge 1: AI Projects */}
+              {/* Desktop Floating Badges (Visible on Large screens >= 992px) */}
               <div
-                className="position-absolute d-flex align-items-center gap-2 p-2 px-3 rounded-4 glass-card animate-float"
+                className="position-absolute d-none d-lg-flex align-items-center gap-2 p-2 px-3 rounded-4 glass-card animate-float"
                 style={{
                   top: '-15px',
                   right: '-15px',
@@ -191,9 +192,8 @@ function Hero({ profile }) {
                 </div>
               </div>
 
-              {/* Floating Badge 2: Hackathon Awards */}
               <div
-                className="position-absolute d-flex align-items-center gap-2 p-2 px-3 rounded-4 glass-card animate-float"
+                className="position-absolute d-none d-lg-flex align-items-center gap-2 p-2 px-3 rounded-4 glass-card animate-float"
                 style={{
                   bottom: '30px',
                   left: '-25px',
@@ -217,9 +217,8 @@ function Hero({ profile }) {
                 </div>
               </div>
 
-              {/* Floating Badge 3: Academic CGPA */}
               <div
-                className="position-absolute d-flex align-items-center gap-2 p-2 px-3 rounded-4 glass-card animate-float"
+                className="position-absolute d-none d-lg-flex align-items-center gap-2 p-2 px-3 rounded-4 glass-card animate-float"
                 style={{
                   bottom: '-15px',
                   right: '-10px',
@@ -240,6 +239,39 @@ function Hero({ profile }) {
                   <div className="text-muted" style={{ fontSize: '0.72rem' }}>
                     {pData.badge3Sub || 'Kongu Engg College'}
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile / Tablet Stat Badges (Clean, aligned pill row underneath avatar, No overlap!) */}
+            <div className="d-flex d-lg-none flex-wrap justify-content-center gap-2 mt-4 w-100 px-2" style={{ maxWidth: '340px' }}>
+              <div className="d-flex align-items-center gap-2 p-2 px-3 rounded-3 glass-card flex-grow-1" style={{ fontSize: '0.82rem' }}>
+                <div className="d-flex align-items-center justify-content-center rounded-2 p-1" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent-primary)' }}>
+                  <Code size={15} />
+                </div>
+                <div>
+                  <div className="fw-bold" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>{pData.badge1Title || '3+ AI Projects'}</div>
+                  <div className="text-muted" style={{ fontSize: '0.68rem' }}>{pData.badge1Sub || 'CNN, RAG, MathBot'}</div>
+                </div>
+              </div>
+
+              <div className="d-flex align-items-center gap-2 p-2 px-3 rounded-3 glass-card flex-grow-1" style={{ fontSize: '0.82rem' }}>
+                <div className="d-flex align-items-center justify-content-center rounded-2 p-1" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent-primary)' }}>
+                  <Award size={15} />
+                </div>
+                <div>
+                  <div className="fw-bold" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>{pData.badge2Title || '4 Awards Won'}</div>
+                  <div className="text-muted" style={{ fontSize: '0.68rem' }}>{pData.badge2Sub || 'PSG, KEC, BYTS'}</div>
+                </div>
+              </div>
+
+              <div className="d-flex align-items-center gap-2 p-2 px-3 rounded-3 glass-card flex-grow-1" style={{ fontSize: '0.82rem' }}>
+                <div className="d-flex align-items-center justify-content-center rounded-2 p-1" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent-primary)' }}>
+                  <GraduationCap size={15} />
+                </div>
+                <div>
+                  <div className="fw-bold" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>{pData.badge3Title || '8.10 CGPA'}</div>
+                  <div className="text-muted" style={{ fontSize: '0.68rem' }}>{pData.badge3Sub || 'Kongu Engg College'}</div>
                 </div>
               </div>
             </div>

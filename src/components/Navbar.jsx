@@ -43,10 +43,10 @@ function Navbar() {
     <header
       className={`fixed-top transition-all ${scrolled ? 'shadow-sm py-2' : 'py-3'}`}
       style={{
-        backgroundColor: scrolled ? 'var(--nav-bg)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(16px)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(16px)' : 'none',
-        borderBottom: scrolled ? '1px solid var(--border-color)' : 'none',
+        backgroundColor: scrolled ? 'var(--nav-bg)' : 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: scrolled ? '1px solid var(--border-color)' : '1px solid rgba(255, 255, 255, 0.08)',
         transition: 'all 0.3s ease',
         zIndex: 1050
       }}
