@@ -4,10 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"node server/index.js\" \"vite\"",
+    "dev": "concurrently \"node server/index.js\" \"vite --host\"",
     "server": "node server/index.js",
     "client": "vite",
-    "pannu": "concurrently \"node server/index.js\" \"vite --host\"",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"

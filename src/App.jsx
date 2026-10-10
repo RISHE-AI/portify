@@ -12,10 +12,11 @@ import GalaxyStars from './components/GalaxyStars';
 import AdminLogin from './admin/AdminLogin';
 import AdminDashboard from './admin/AdminDashboard';
 import { api } from './services/api';
+import { initialPortfolioData } from './services/initialData';
 import './App.css';
 
 function PublicPortfolio() {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState(initialPortfolioData);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

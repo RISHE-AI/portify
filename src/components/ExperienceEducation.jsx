@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Briefcase, GraduationCap, Calendar, MapPin, ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
-import travelImg from '../assets/travel.png';
-import portfolioImg from '../assets/portfolio.png';
 
 function ExperienceEducation({ experience = [], education = [] }) {
   const [expImageIndices, setExpImageIndices] = useState({});
@@ -14,19 +12,6 @@ function ExperienceEducation({ experience = [], education = [] }) {
   const [expLightboxIndex, setExpLightboxIndex] = useState(0);
   const [lightboxTouchStartX, setLightboxTouchStartX] = useState(0);
   const [lightboxTouchCurrentX, setLightboxTouchCurrentX] = useState(0);
-
-  const defaultExperience = [
-    {
-      id: 'exp-1',
-      role: 'Full Stack Website Development',
-      company: 'Pluto Intero',
-      location: 'Remote',
-      period: '2024 - Present',
-      description: 'Developed a full-stack website for a startup focused on selling eco-friendly decoration lamps made from reused plastics. Implemented features for product display, user authentication, and online interaction using the MERN stack and Firebase.',
-      technologies: ['MERN Stack', 'Firebase', 'React.js', 'Node.js', 'MongoDB'],
-      slides: [travelImg, portfolioImg]
-    }
-  ];
 
   const defaultEducation = [
     {
@@ -55,13 +40,14 @@ function ExperienceEducation({ experience = [], education = [] }) {
     }
   ];
 
-  const expList = experience.length > 0 ? experience : defaultExperience;
+  const expList = Array.isArray(experience) ? experience : [];
   const eduList = education.length > 0 ? education : defaultEducation;
 
   const getExpSlides = (exp) => {
-    if (exp.slides && exp.slides.length > 0) return exp.slides;
+    if (!exp) return [];
+    if (Array.isArray(exp.slides) && exp.slides.length > 0) return exp.slides.filter(Boolean);
     if (exp.image) return [exp.image];
-    return [travelImg, portfolioImg];
+    return [];
   };
 
   const openExpLightbox = (exp, slideIndex = 0) => {

@@ -10,12 +10,16 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
+const UPLOADS_DIR = path.join(__dirname, '..', '..', 'public', 'uploads');
+const LEGACY_UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
+if (!fs.existsSync(LEGACY_UPLOADS_DIR)) {
+  fs.mkdirSync(LEGACY_UPLOADS_DIR, { recursive: true });
+}
 
-// Multer Storage setup
+// Multer Storage setup (saves directly to public/uploads so uploaded images are committed & deployed to Vercel)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, UPLOADS_DIR);

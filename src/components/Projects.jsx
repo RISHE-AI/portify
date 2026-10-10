@@ -2,9 +2,6 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ExternalLink, Sparkles, X, ChevronRight, ChevronLeft, Maximize2 } from 'lucide-react';
 import { GithubIcon } from './Icons';
-import plantImg from '../assets/c19.png';
-import ragImg from '../assets/travel.png';
-import mathImg from '../assets/portfolio.png';
 
 function Projects({ projects = [] }) {
   const [activeCategory, setActiveCategory] = useState('All');
@@ -19,49 +16,7 @@ function Projects({ projects = [] }) {
   const [lightboxTouchStartX, setLightboxTouchStartX] = useState(0);
   const [lightboxTouchCurrentX, setLightboxTouchCurrentX] = useState(0);
 
-  const defaultProjects = [
-    {
-      id: 'proj-1',
-      title: 'Plant Disease Prediction',
-      shortDescription: 'CNN-based plant disease prediction system classifying leaf images for early disease detection.',
-      detailedDescription: 'Engineered an end-to-end computer vision pipeline using Convolutional Neural Networks (CNN) and MobileNet-SSD architecture. Real-time image pre-processing with OpenCV & NumPy, delivering high-accuracy crop disease diagnosis.',
-      slides: [plantImg, ragImg, mathImg],
-      technologies: ['Python', 'MobileNet-SSD', 'TensorFlow/Keras', 'OpenCV', 'NumPy', 'React.js'],
-      category: 'AI & ML',
-      githubUrl: 'https://github.com/RISHE-AI',
-      demoUrl: '',
-      featured: true,
-      published: true
-    },
-    {
-      id: 'proj-2',
-      title: 'RAG-Powered Document Chatbot',
-      shortDescription: 'Document chatbot enabling users to upload PDFs and receive context-aware answers based on content.',
-      detailedDescription: 'Developed a Retrieval-Augmented Generation (RAG) document assistant. Integrates FAISS vector indices and Sentence Transformers for semantic chunking, enabling instant context-aware natural language Q&A over complex PDF files.',
-      slides: [ragImg, plantImg, mathImg],
-      technologies: ['Python', 'LLM', 'RAG', 'FAISS', 'Sentence Transformers', 'React JS'],
-      category: 'AI & ML',
-      githubUrl: 'https://github.com/RISHE-AI',
-      demoUrl: '',
-      featured: true,
-      published: true
-    },
-    {
-      id: 'proj-3',
-      title: 'AI Study Buddy (Math Bot)',
-      shortDescription: 'AI-powered math assistant solving problems from text, images, camera input, and handwritten equations.',
-      detailedDescription: 'Built MathBot, an AI tutoring assistant capable of processing mathematical input from camera streams or uploads. Employs OCR and Computer Vision to segment handwritten equations and generate step-by-step solutions.',
-      slides: [mathImg, plantImg, ragImg],
-      technologies: ['Python', 'OCR', 'Computer Vision', 'LLM', 'OpenCV', 'React JS', 'MongoDB'],
-      category: 'AI & ML',
-      githubUrl: 'https://github.com/RISHE-AI',
-      demoUrl: '',
-      featured: true,
-      published: true
-    }
-  ];
-
-  const displayList = (projects.length > 0 ? projects : defaultProjects).filter((p) => p.published !== false);
+  const displayList = (Array.isArray(projects) ? projects : []).filter((p) => p.published !== false);
 
   const categories = ['All', ...new Set(['AI & ML', 'Full Stack Web', ...displayList.map((p) => p.category).filter(Boolean)])];
 
@@ -71,13 +26,10 @@ function Projects({ projects = [] }) {
   });
 
   const getProjectSlides = (proj) => {
-    if (!proj) return [plantImg];
-    if (Array.isArray(proj.slides) && proj.slides.length > 0) return proj.slides;
+    if (!proj) return [];
+    if (Array.isArray(proj.slides) && proj.slides.length > 0) return proj.slides.filter(Boolean);
     if (proj.image) return [proj.image];
-    if (proj.id === 'proj-1') return [plantImg, ragImg, mathImg];
-    if (proj.id === 'proj-2') return [ragImg, plantImg, mathImg];
-    if (proj.id === 'proj-3') return [mathImg, plantImg, ragImg];
-    return [plantImg];
+    return [];
   };
 
   const openLightbox = (proj, slideIndex = 0) => {
@@ -192,34 +144,36 @@ function Projects({ projects = [] }) {
                   <div
                     className="position-relative overflow-hidden user-select-none"
                     style={{
-                      height: '220px',
+                      height: slides.length > 0 ? '220px' : '54px',
                       backgroundColor: '#0b0f19',
                       touchAction: 'pan-y',
-                      cursor: 'pointer'
+                      cursor: slides.length > 0 ? 'pointer' : 'default'
                     }}
-                    onClick={() => openLightbox(proj, activeSlideIdx)}
+                    onClick={() => slides.length > 0 && openLightbox(proj, activeSlideIdx)}
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={() => handleTouchEnd(proj.id, slides.length)}
-                    title="Click to view image in full-screen carousel"
+                    title={slides.length > 0 ? 'Click to view image in full-screen carousel' : proj.title}
                   >
                     {/* 100% Real-Size Uncropped Image */}
-                    <img
-                      src={slides[activeSlideIdx]}
-                      alt={`${proj.title} slide ${activeSlideIdx + 1}`}
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        padding: '8px',
-                        pointerEvents: 'none',
-                        userSelect: 'none',
-                        display: 'block'
-                      }}
-                      draggable={false}
-                    />
+                    {slides.length > 0 && (
+                      <img
+                        src={slides[activeSlideIdx]}
+                        alt={`${proj.title} slide ${activeSlideIdx + 1}`}
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          padding: '8px',
+                          pointerEvents: 'none',
+                          userSelect: 'none',
+                          display: 'block'
+                        }}
+                        draggable={false}
+                      />
+                    )}
 
                     {/* Category & Featured Badge */}
                     <span
@@ -254,22 +208,24 @@ function Projects({ projects = [] }) {
                     )}
 
                     {/* Expand Badge */}
-                    <span
-                      className="position-absolute d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 small"
-                      style={{
-                        bottom: '10px',
-                        right: '10px',
-                        backgroundColor: 'rgba(0, 0, 0, 0.72)',
-                        backdropFilter: 'blur(6px)',
-                        color: '#ffffff',
-                        fontSize: '0.72rem',
-                        pointerEvents: 'none',
-                        zIndex: 2
-                      }}
-                    >
-                      <Maximize2 size={12} />
-                      <span>{slides.length > 1 ? `${slides.length} Photos` : 'Expand'}</span>
-                    </span>
+                    {slides.length > 0 && (
+                      <span
+                        className="position-absolute d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 small"
+                        style={{
+                          bottom: '10px',
+                          right: '10px',
+                          backgroundColor: 'rgba(0, 0, 0, 0.72)',
+                          backdropFilter: 'blur(6px)',
+                          color: '#ffffff',
+                          fontSize: '0.72rem',
+                          pointerEvents: 'none',
+                          zIndex: 2
+                        }}
+                      >
+                        <Maximize2 size={12} />
+                        <span>{slides.length > 1 ? `${slides.length} Photos` : 'Expand'}</span>
+                      </span>
+                    )}
 
                     {/* Per-Card Slide Buttons */}
                     {slides.length > 1 && (

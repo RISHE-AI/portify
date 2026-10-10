@@ -76,39 +76,48 @@ async function idbSet(key, value) {
 
 // Local & IndexedDB Storage helpers for Vercel/Static hosting
 async function getLocalData() {
-  if (memoryCache) {
+  const codeVersion = initialPortfolioData.lastUpdated || 0;
+
+  if (memoryCache && (memoryCache.lastUpdated || 0) >= codeVersion) {
     return JSON.parse(JSON.stringify(memoryCache));
   }
 
   // 1. Check IndexedDB first (supports hundreds of MBs of project images)
   const idbData = await idbGet('portify_data');
-  if (idbData && typeof idbData === 'object') {
+  if (idbData && typeof idbData === 'object' && (idbData.lastUpdated || 0) >= codeVersion) {
     memoryCache = idbData;
     return JSON.parse(JSON.stringify(idbData));
   }
 
-  // 2. Migrate existing data from localStorage if present
+  // 2. Check localStorage if present and up-to-date
   try {
     const raw = localStorage.getItem('portify_data');
     if (raw) {
       const parsed = JSON.parse(raw);
-      memoryCache = parsed;
-      await idbSet('portify_data', parsed);
-      return JSON.parse(JSON.stringify(parsed));
+      if (parsed && typeof parsed === 'object' && (parsed.lastUpdated || 0) >= codeVersion) {
+        memoryCache = parsed;
+        await idbSet('portify_data', parsed);
+        return JSON.parse(JSON.stringify(parsed));
+      }
     }
   } catch (e) {
     console.warn('Error reading local portfolio data:', e);
   }
 
-  // 3. Initialize from initialPortfolioData
+  // 3. Initialize or upgrade from initialPortfolioData (hardcoded in source code)
   const initial = JSON.parse(JSON.stringify(initialPortfolioData));
+  initial.lastUpdated = codeVersion;
   memoryCache = initial;
   await idbSet('portify_data', initial);
+  try {
+    localStorage.setItem('portify_data', JSON.stringify(initial));
+  } catch (e) {}
   return JSON.parse(JSON.stringify(initial));
 }
 
 async function saveLocalData(data) {
   const cloned = JSON.parse(JSON.stringify(data));
+  cloned.lastUpdated = Date.now();
   memoryCache = cloned;
 
   // Always persist to IndexedDB (unlimited storage quota)
@@ -120,6 +129,15 @@ async function saveLocalData(data) {
   } catch (e) {
     // QuotaExceededError in localStorage is safely handled because IndexedDB + memoryCache hold the full dataset
   }
+
+  // If running in Vite local dev server, also hardcode directly into src/services/initialData.js
+  try {
+    fetch('/__sync_initial_data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cloned)
+    }).catch(() => {});
+  } catch (e) {}
 }
 
 function getLocalMessages() {

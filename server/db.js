@@ -8,12 +8,14 @@ const __dirname = path.dirname(__filename);
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'database.json');
+const INITIAL_DATA_FILE = path.join(__dirname, '..', 'src', 'services', 'initialData.js');
 
 const getDefaultData = () => {
   const salt = bcrypt.genSaltSync(10);
-  const passwordHash = bcrypt.hashSync('admin123', salt);
+  const passwordHash = bcrypt.hashSync('RISHE8080b@', salt);
 
   return {
+    lastUpdated: Date.now(),
     admin: {
       username: 'admin',
       passwordHash: passwordHash,
@@ -41,69 +43,8 @@ const getDefaultData = () => {
       emailjsTemplateId: 'template_9755cdk',
       emailjsPublicKey: 'O-98xkd9yq2ghtwlC'
     },
-    projects: [
-      {
-        id: 'proj-1',
-        title: 'Plant Disease Prediction',
-        shortDescription: 'CNN-based plant disease prediction system to classify plant diseases from leaf images for early and accurate disease detection.',
-        detailedDescription: 'Developed a high-precision deep learning classifier using Convolutional Neural Networks (CNN) and MobileNet-SSD architecture. The system processes uploaded leaf images or camera captures, performs image preprocessing with OpenCV and NumPy, and classifies plant diseases with actionable treatment advice.',
-        technologies: ['Python', 'MobileNet-SSD', 'TensorFlow/Keras', 'OpenCV', 'NumPy', 'React.js'],
-        category: 'AI & ML',
-        image: '',
-        slides: [],
-        githubUrl: 'https://github.com/RISHE-AI',
-        demoUrl: '',
-        featured: true,
-        published: true,
-        order: 1,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'proj-2',
-        title: 'RAG-Powered Document Chatbot',
-        shortDescription: 'RAG-based document chatbot enabling users to upload documents and receive accurate, context-aware answers based on content.',
-        detailedDescription: 'Engineered an intelligent Retrieval-Augmented Generation (RAG) assistant. Users can upload PDF documents or text files which are chunked, embedded using Sentence Transformers, and indexed into a FAISS vector database. Querying retrieves accurate contextual chunks fed into an LLM for hallucination-free answers.',
-        technologies: ['Python', 'LLM', 'RAG', 'FAISS', 'Sentence Transformers', 'React JS'],
-        category: 'AI & ML',
-        image: '',
-        slides: [],
-        githubUrl: 'https://github.com/RISHE-AI',
-        demoUrl: '',
-        featured: true,
-        published: true,
-        order: 2,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'proj-3',
-        title: 'AI Study Buddy (Math Bot)',
-        shortDescription: 'AI-powered math assistant that solves problems from text, images, camera input, and handwritten equations.',
-        detailedDescription: 'Created MathBot, an interactive AI study companion designed to solve mathematical problems across multiple input formats. Utilizes OCR engines and Computer Vision to extract handwritten or typed math equations, passing them to reasoning models to produce step-by-step explanations.',
-        technologies: ['Python', 'OCR', 'Computer Vision', 'LLM', 'OpenCV', 'React JS', 'MongoDB'],
-        category: 'AI & ML',
-        image: '',
-        slides: [],
-        githubUrl: 'https://github.com/RISHE-AI',
-        demoUrl: '',
-        featured: true,
-        published: true,
-        order: 3,
-        createdAt: new Date().toISOString()
-      }
-    ],
-    experience: [
-      {
-        id: 'exp-1',
-        role: 'Full Stack Website Development',
-        company: 'Pluto Intero',
-        location: 'Remote',
-        period: '2024 - Present',
-        description: 'Developed a full-stack website for a startup focused on selling eco-friendly decoration lamps made from reused plastics. Implemented features for product display, user authentication, and online interaction using the MERN stack and Firebase.',
-        technologies: ['React.js', 'Node.js', 'Express.js', 'MongoDB', 'Firebase'],
-        slides: [],
-        order: 1
-      }
-    ],
+    projects: [],
+    experience: [],
     education: [
       {
         id: 'edu-1',
@@ -235,9 +176,31 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
+// Automatically hardcode the latest Admin Dashboard data into src/services/initialData.js
+// so all visitors on Vercel / production always see the exact admin-configured portfolio
+export function syncInitialDataFile(data) {
+  try {
+    const publicData = {
+      lastUpdated: data.lastUpdated || Date.now(),
+      profile: data.profile || {},
+      projects: (data.projects || []).sort((a, b) => (a.order || 0) - (b.order || 0)),
+      experience: (data.experience || []).sort((a, b) => (a.order || 0) - (b.order || 0)),
+      education: (data.education || []).sort((a, b) => (a.order || 0) - (b.order || 0)),
+      skills: data.skills || [],
+      certifications: data.certifications || [],
+      achievements: data.achievements || []
+    };
+    const fileContent = `// Auto-synced from Admin Dashboard — hardcoded portfolio data for all visitors\nexport const initialPortfolioData = ${JSON.stringify(publicData, null, 2)};\n`;
+    fs.writeFileSync(INITIAL_DATA_FILE, fileContent, 'utf-8');
+  } catch (err) {
+    console.error('Error syncing initialData.js:', err);
+  }
+}
+
 export function initDB() {
   const data = getDefaultData();
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  syncInitialDataFile(data);
   return data;
 }
 
@@ -252,6 +215,7 @@ if (!fs.existsSync(DB_FILE)) {
 
     // Ensure profile has all badges and statusText
     existing.profile = { ...defaults.profile, ...existing.profile };
+    existing.lastUpdated = existing.lastUpdated || Date.now();
 
     // Ensure experience has slides array
     if (existing.experience) {
@@ -262,6 +226,7 @@ if (!fs.existsSync(DB_FILE)) {
     }
 
     fs.writeFileSync(DB_FILE, JSON.stringify(existing, null, 2), 'utf-8');
+    syncInitialDataFile(existing);
   } catch (e) {
     initDB();
   }
@@ -281,9 +246,11 @@ export function readDB() {
 
 export function writeDB(data) {
   try {
+    data.lastUpdated = Date.now();
     const tempFile = DB_FILE + '.tmp';
     fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
     fs.renameSync(tempFile, DB_FILE);
+    syncInitialDataFile(data);
     return true;
   } catch (err) {
     console.error('Error writing DB:', err);

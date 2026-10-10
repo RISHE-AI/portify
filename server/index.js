@@ -16,9 +16,11 @@ app.use(cors());
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
-// Static uploads folder
-const uploadsPath = path.join(__dirname, 'uploads');
-app.use('/uploads', express.static(uploadsPath));
+// Static uploads folder (serve from public/uploads first, then server/uploads fallback)
+const publicUploadsPath = path.join(__dirname, '..', 'public', 'uploads');
+const legacyUploadsPath = path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(publicUploadsPath));
+app.use('/uploads', express.static(legacyUploadsPath));
 
 // Static frontend dist if built
 const distPath = path.join(__dirname, '..', 'dist');
