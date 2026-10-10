@@ -248,3 +248,32 @@ button {
 .animate-float {
   animation: floatOrb 5s infinite ease-in-out;
 }
+
+/* Continuous Horizontal Carousel Slide Animations (1 -> 2 -> 3 -> 1 -> 2 -> 3) */
+@keyframes carouselSlideNext {
+  0% {
+    transform: translate3d(0%, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes carouselSlidePrev {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0%, 0, 0);
+  }
+}
+
+.carousel-track-next {
+  animation: carouselSlideNext 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform;
+}
+
+.carousel-track-prev {
+  animation: carouselSlidePrev 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform;
+}

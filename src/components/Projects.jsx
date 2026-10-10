@@ -6,13 +6,14 @@ import { GithubIcon } from './Icons';
 function Projects({ projects = [] }) {
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedProject, setSelectedProject] = useState(null);
-  const [cardImageIndices, setCardImageIndices] = useState({});
+  const [cardSlideState, setCardSlideState] = useState({});
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchCurrentX, setTouchCurrentX] = useState(0);
 
   // Lightbox Modal state for full-screen carousel view
   const [lightboxProject, setLightboxProject] = useState(null);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lightboxSlideInfo, setLightboxSlideInfo] = useState({ current: 0, prev: null, dir: 'next', step: 0 });
+  const lightboxIndex = lightboxSlideInfo.current;
   const [lightboxTouchStartX, setLightboxTouchStartX] = useState(0);
   const [lightboxTouchCurrentX, setLightboxTouchCurrentX] = useState(0);
 
@@ -32,9 +33,34 @@ function Projects({ projects = [] }) {
     return [];
   };
 
+  // Automatic interval to slide all multi-image project carousels in a 1 -> 2 -> 3 -> 1 -> 2 -> 3 sequence
+  useEffect(() => {
+    if (lightboxProject) return;
+    const interval = setInterval(() => {
+      setCardSlideState((prev) => {
+        const nextState = { ...prev };
+        displayList.forEach((proj) => {
+          const slides = getProjectSlides(proj);
+          if (slides.length > 1) {
+            const cur = prev[proj.id]?.current || 0;
+            const next = (cur + 1) % slides.length;
+            nextState[proj.id] = {
+              current: next,
+              prev: cur,
+              dir: 'next',
+              step: (prev[proj.id]?.step || 0) + 1
+            };
+          }
+        });
+        return nextState;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [displayList, lightboxProject]);
+
   const openLightbox = (proj, slideIndex = 0) => {
     setLightboxProject(proj);
-    setLightboxIndex(slideIndex);
+    setLightboxSlideInfo({ current: slideIndex, prev: null, dir: 'next', step: 0 });
   };
 
   const closeLightbox = () => {
@@ -44,14 +70,54 @@ function Projects({ projects = [] }) {
   const handleLightboxNext = () => {
     if (!lightboxProject) return;
     const slides = getProjectSlides(lightboxProject);
-    setLightboxIndex((prev) => (prev + 1) % slides.length);
+    if (slides.length <= 1) return;
+    setLightboxSlideInfo((prev) => ({
+      current: (prev.current + 1) % slides.length,
+      prev: prev.current,
+      dir: 'next',
+      step: prev.step + 1
+    }));
   };
 
   const handleLightboxPrev = () => {
     if (!lightboxProject) return;
     const slides = getProjectSlides(lightboxProject);
-    setLightboxIndex((prev) => (prev - 1 + slides.length) % slides.length);
+    if (slides.length <= 1) return;
+    setLightboxSlideInfo((prev) => ({
+      current: (prev.current - 1 + slides.length) % slides.length,
+      prev: prev.current,
+      dir: 'prev',
+      step: prev.step + 1
+    }));
   };
+
+  const setLightboxIndex = (targetIdx) => {
+    setLightboxSlideInfo((prev) => {
+      if (prev.current === targetIdx) return prev;
+      return {
+        current: targetIdx,
+        prev: prev.current,
+        dir: targetIdx > prev.current ? 'next' : 'prev',
+        step: prev.step + 1
+      };
+    });
+  };
+
+  // Auto-advance interval for open Lightbox carousel
+  useEffect(() => {
+    if (!lightboxProject) return;
+    const slides = getProjectSlides(lightboxProject);
+    if (slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setLightboxSlideInfo((prev) => ({
+        current: (prev.current + 1) % slides.length,
+        prev: prev.current,
+        dir: 'next',
+        step: prev.step + 1
+      }));
+    }, 3200);
+    return () => clearInterval(interval);
+  }, [lightboxProject]);
 
   // Keyboard controls for Lightbox (Esc, Left, Right)
   useEffect(() => {
@@ -67,18 +133,137 @@ function Projects({ projects = [] }) {
 
   const handleCardNextImage = (e, projId, slideLength) => {
     if (e && e.stopPropagation) e.stopPropagation();
-    setCardImageIndices((prev) => ({
-      ...prev,
-      [projId]: ((prev[projId] || 0) + 1) % slideLength
-    }));
+    if (slideLength <= 1) return;
+    setCardSlideState((prev) => {
+      const cur = prev[projId]?.current || 0;
+      const next = (cur + 1) % slideLength;
+      return {
+        ...prev,
+        [projId]: {
+          current: next,
+          prev: cur,
+          dir: 'next',
+          step: (prev[projId]?.step || 0) + 1
+        }
+      };
+    });
   };
 
   const handleCardPrevImage = (e, projId, slideLength) => {
     if (e && e.stopPropagation) e.stopPropagation();
-    setCardImageIndices((prev) => ({
-      ...prev,
-      [projId]: ((prev[projId] || 0) - 1 + slideLength) % slideLength
-    }));
+    if (slideLength <= 1) return;
+    setCardSlideState((prev) => {
+      const cur = prev[projId]?.current || 0;
+      const next = (cur - 1 + slideLength) % slideLength;
+      return {
+        ...prev,
+        [projId]: {
+          current: next,
+          prev: cur,
+          dir: 'prev',
+          step: (prev[projId]?.step || 0) + 1
+        }
+      };
+    });
+  };
+
+  const handleCardSelectSlide = (projId, targetIdx) => {
+    setCardSlideState((prev) => {
+      const cur = prev[projId]?.current || 0;
+      if (cur === targetIdx) return prev;
+      return {
+        ...prev,
+        [projId]: {
+          current: targetIdx,
+          prev: cur,
+          dir: targetIdx > cur ? 'next' : 'prev',
+          step: (prev[projId]?.step || 0) + 1
+        }
+      };
+    });
+  };
+
+  const renderSlidingImages = (slides, projId, altPrefix, padding = '8px') => {
+    if (!slides || slides.length === 0) return null;
+    const info = cardSlideState[projId] || { current: 0, prev: null, dir: 'next', step: 0 };
+    const activeIdx = info.current % slides.length;
+    const prevIdx = info.prev !== null ? info.prev % slides.length : null;
+    const dir = info.dir || 'next';
+    const step = info.step || 0;
+
+    if (prevIdx === null || prevIdx === activeIdx || slides.length === 1) {
+      return (
+        <img
+          src={slides[activeIdx]}
+          alt={`${altPrefix} slide ${activeIdx + 1}`}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            padding,
+            pointerEvents: 'none',
+            userSelect: 'none',
+            display: 'block'
+          }}
+          draggable={false}
+        />
+      );
+    }
+
+    const firstSlide = dir === 'prev' ? slides[activeIdx] : slides[prevIdx];
+    const secondSlide = dir === 'prev' ? slides[prevIdx] : slides[activeIdx];
+
+    return (
+      <div
+        key={step}
+        className={dir === 'prev' ? 'carousel-track-prev' : 'carousel-track-next'}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          display: 'flex',
+          width: '200%',
+          height: '100%',
+          pointerEvents: 'none',
+          userSelect: 'none'
+        }}
+      >
+        <div style={{ width: '50%', height: '100%', position: 'relative', flexShrink: 0 }}>
+          <img
+            src={firstSlide}
+            alt={`${altPrefix} prev`}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              padding,
+              display: 'block'
+            }}
+            draggable={false}
+          />
+        </div>
+        <div style={{ width: '50%', height: '100%', position: 'relative', flexShrink: 0 }}>
+          <img
+            src={secondSlide}
+            alt={`${altPrefix} slide ${activeIdx + 1}`}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              padding,
+              display: 'block'
+            }}
+            draggable={false}
+          />
+        </div>
+      </div>
+    );
   };
 
   const handleTouchStart = (e) => {
@@ -135,7 +320,7 @@ function Projects({ projects = [] }) {
         <div className="row g-4">
           {filteredProjects.map((proj, idx) => {
             const slides = getProjectSlides(proj);
-            const activeSlideIdx = cardImageIndices[proj.id] || 0;
+            const activeSlideIdx = slides.length > 0 ? ((cardSlideState[proj.id]?.current || 0) % slides.length) : 0;
 
             return (
               <div key={proj.id} className="col-lg-4 col-md-6 animate-fade-in" style={{ animationDelay: `${idx * 0.1}s` }}>
@@ -155,25 +340,8 @@ function Projects({ projects = [] }) {
                     onTouchEnd={() => handleTouchEnd(proj.id, slides.length)}
                     title={slides.length > 0 ? 'Click to view image in full-screen carousel' : proj.title}
                   >
-                    {/* 100% Real-Size Uncropped Image */}
-                    {slides.length > 0 && (
-                      <img
-                        src={slides[activeSlideIdx]}
-                        alt={`${proj.title} slide ${activeSlideIdx + 1}`}
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'contain',
-                          padding: '8px',
-                          pointerEvents: 'none',
-                          userSelect: 'none',
-                          display: 'block'
-                        }}
-                        draggable={false}
-                      />
-                    )}
+                    {/* 100% Real-Size Uncropped Sliding Carousel Track */}
+                    {renderSlidingImages(slides, proj.id, proj.title, '8px')}
 
                     {/* Category & Featured Badge */}
                     <span
@@ -285,7 +453,7 @@ function Projects({ projects = [] }) {
                               }}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setCardImageIndices((prev) => ({ ...prev, [proj.id]: sIdx }));
+                                handleCardSelectSlide(proj.id, sIdx);
                               }}
                             />
                           ))}
@@ -423,7 +591,8 @@ function Projects({ projects = [] }) {
                   cursor: 'pointer'
                 }}
                 onClick={() => {
-                  const currentIdx = cardImageIndices[selectedProject.id] || 0;
+                  const modalSlides = getProjectSlides(selectedProject);
+                  const currentIdx = (cardSlideState[selectedProject.id]?.current || 0) % Math.max(1, modalSlides.length);
                   openLightbox(selectedProject, currentIdx);
                 }}
                 onTouchStart={handleTouchStart}
@@ -431,23 +600,8 @@ function Projects({ projects = [] }) {
                 onTouchEnd={() => handleTouchEnd(selectedProject.id, getProjectSlides(selectedProject).length)}
                 title="Click to view full-screen image carousel"
               >
-                {/* 100% Real Uncropped Image */}
-                <img
-                  src={getProjectSlides(selectedProject)[cardImageIndices[selectedProject.id] || 0]}
-                  alt={selectedProject.title}
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    padding: '10px',
-                    pointerEvents: 'none',
-                    userSelect: 'none',
-                    display: 'block'
-                  }}
-                  draggable={false}
-                />
+                {/* 100% Real Uncropped Image with Continuous Right-Shift Sliding Effect */}
+                {renderSlidingImages(getProjectSlides(selectedProject), selectedProject.id, selectedProject.title, '10px')}
 
                 {getProjectSlides(selectedProject).length > 1 && (
                   <>
@@ -650,23 +804,76 @@ function Projects({ projects = [] }) {
                 style={{
                   position: 'absolute',
                   inset: '8px 54px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  overflow: 'hidden'
                 }}
               >
-                <img
-                  src={getProjectSlides(lightboxProject)[lightboxIndex]}
-                  alt={`${lightboxProject.title} screenshot ${lightboxIndex + 1}`}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    display: 'block',
-                    filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.75))'
-                  }}
-                  draggable={false}
-                />
+                {(() => {
+                  const lbSlides = getProjectSlides(lightboxProject);
+                  const activeIdx = lightboxSlideInfo.current % Math.max(1, lbSlides.length);
+                  const prevIdx = lightboxSlideInfo.prev !== null ? lightboxSlideInfo.prev % Math.max(1, lbSlides.length) : null;
+                  const dir = lightboxSlideInfo.dir || 'next';
+                  if (prevIdx === null || prevIdx === activeIdx || lbSlides.length <= 1) {
+                    return (
+                      <img
+                        src={lbSlides[activeIdx]}
+                        alt={`${lightboxProject.title} screenshot ${activeIdx + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          display: 'block',
+                          filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.75))'
+                        }}
+                        draggable={false}
+                      />
+                    );
+                  }
+                  const firstSlide = dir === 'prev' ? lbSlides[activeIdx] : lbSlides[prevIdx];
+                  const secondSlide = dir === 'prev' ? lbSlides[prevIdx] : lbSlides[activeIdx];
+                  return (
+                    <div
+                      key={lightboxSlideInfo.step}
+                      className={dir === 'prev' ? 'carousel-track-prev' : 'carousel-track-next'}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        display: 'flex',
+                        width: '200%',
+                        height: '100%'
+                      }}
+                    >
+                      <div style={{ width: '50%', height: '100%', position: 'relative', flexShrink: 0 }}>
+                        <img
+                          src={firstSlide}
+                          alt={`${lightboxProject.title} prev`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            display: 'block',
+                            filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.75))'
+                          }}
+                          draggable={false}
+                        />
+                      </div>
+                      <div style={{ width: '50%', height: '100%', position: 'relative', flexShrink: 0 }}>
+                        <img
+                          src={secondSlide}
+                          alt={`${lightboxProject.title} screenshot ${activeIdx + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            display: 'block',
+                            filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.75))'
+                          }}
+                          draggable={false}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Left Chevron */}

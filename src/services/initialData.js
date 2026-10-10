@@ -1,6 +1,6 @@
 // Auto-synced from Admin Dashboard — hardcoded portfolio data for all visitors
 export const initialPortfolioData = {
-  "lastUpdated": 1791649300000,
+  "lastUpdated": 1791650714275,
   "profile": {
     "name": "Rishe S",
     "title": "AI & Machine Learning Engineer | Full Stack Developer",
@@ -29,7 +29,7 @@ export const initialPortfolioData = {
     "emailjsPublicKey": "O-98xkd9yq2ghtwlC",
     "tagline": "Passionate about continuous learning, AI innovation, and high-impact web development.",
     "stats": {
-      "projectsCompleted": 4,
+      "projectsCompleted": 3,
       "hackathonsWon": 4,
       "certificationsCount": 2,
       "cgpa": "8.10"

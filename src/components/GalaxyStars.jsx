@@ -26,22 +26,22 @@ function GalaxyStars() {
     const isDark = theme === 'dark';
 
     // 1. Generate Star / Solar Particles
-    const particleCount = isDark ? 160 : 100;
+    const particleCount = isDark ? 160 : 65;
     const particles = Array.from({ length: particleCount }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      size: Math.random() * 1.8 + 0.4,
-      alpha: Math.random() * 0.8 + 0.2,
-      speed: Math.random() * 0.015 + 0.005,
+      size: isDark ? Math.random() * 1.8 + 0.4 : Math.random() * 1.4 + 0.3,
+      alpha: isDark ? Math.random() * 0.8 + 0.2 : Math.random() * 0.18 + 0.05,
+      speed: isDark ? Math.random() * 0.015 + 0.005 : Math.random() * 0.006 + 0.002,
       twinkleDir: Math.random() > 0.5 ? 1 : -1,
-      // Dark mode: stars (white, cyan, violet) | Light mode: solar/fireball embers (golden, amber, orange)
+      // Dark mode: stars (white, cyan, violet) | Light mode: soft warm embers
       color: isDark
         ? Math.random() > 0.7 ? '#818cf8' : Math.random() > 0.4 ? '#38bdf8' : '#ffffff'
-        : Math.random() > 0.7 ? '#ea580c' : Math.random() > 0.4 ? '#f59e0b' : '#fbbf24',
-      vy: isDark ? (Math.random() - 0.5) * 0.1 : -Math.random() * 0.3 - 0.1 // Ember float upward in light mode
+        : Math.random() > 0.7 ? '#fb923c' : Math.random() > 0.4 ? '#fdba74' : '#fcd34d',
+      vy: isDark ? (Math.random() - 0.5) * 0.1 : -Math.random() * 0.2 - 0.05
     }));
 
-    // 2. Cosmic Nebulae Lights (Dark) or Solar Flare Core (Light)
+    // 2. Cosmic Nebulae Lights (Dark) or Soft Warm Ambient Glow (Light)
     const lights = isDark
       ? [
           { x: width * 0.8, y: height * 0.2, r: 240, color: 'rgba(99, 102, 241, 0.05)' },
@@ -49,13 +49,12 @@ function GalaxyStars() {
           { x: width * 0.5, y: height * 0.4, r: 350, color: 'rgba(139, 92, 246, 0.03)' }
         ]
       : [
-          // Fireball core in light mode
-          { x: width * 0.9, y: height * 0.1, r: 320, color: 'rgba(249, 115, 22, 0.07)' },
-          { x: width * 0.1, y: height * 0.8, r: 260, color: 'rgba(245, 158, 11, 0.05)' },
-          { x: width * 0.5, y: height * 0.5, r: 300, color: 'rgba(251, 191, 36, 0.04)' }
+          { x: width * 0.9, y: height * 0.12, r: 300, color: 'rgba(251, 146, 60, 0.025)' },
+          { x: width * 0.1, y: height * 0.8, r: 250, color: 'rgba(245, 158, 11, 0.02)' },
+          { x: width * 0.5, y: height * 0.5, r: 280, color: 'rgba(251, 191, 36, 0.015)' }
         ];
 
-    // 3. Floating Celestial Planets (Active in Dark Mode Galaxy)
+    // 3. Floating Celestial Planets (Active in Dark Mode Galaxy; subtle low-intensity warm orb in Light Mode)
     const planets = isDark
       ? [
           // Saturn-style ringed planet
@@ -87,15 +86,15 @@ function GalaxyStars() {
           }
         ]
       : [
-          // Fireball Solar Orb in Light Mode
+          // Subtle low-intensity warm solar orb in Light Mode
           {
             x: width * 0.88,
             y: height * 0.18,
-            radius: 36,
+            radius: 28,
             hasRing: false,
-            color1: '#f97316',
-            color2: '#ea580c',
-            glowColor: 'rgba(234, 88, 12, 0.35)',
+            color1: 'rgba(253, 186, 116, 0.18)',
+            color2: 'rgba(251, 146, 60, 0.10)',
+            glowColor: 'rgba(251, 146, 60, 0.07)',
             isSun: true
           }
         ];
@@ -111,8 +110,8 @@ function GalaxyStars() {
         length: Math.random() * 90 + 60,
         speed: Math.random() * 8 + 7,
         angle: Math.PI / 4 + (Math.random() - 0.5) * 0.2,
-        opacity: 1,
-        color: isDark ? 'rgba(255, 255, 255,' : 'rgba(234, 88, 12,'
+        opacity: isDark ? 1 : 0.22,
+        color: isDark ? 'rgba(255, 255, 255,' : 'rgba(251, 146, 60,'
       };
     };
 
@@ -130,7 +129,7 @@ function GalaxyStars() {
         ctx.fill();
       });
 
-      // B. Floating Celestial Planets / Fireball Sun
+      // B. Floating Celestial Planets / Soft Solar Orb
       planets.forEach((p) => {
         // Slow subtle drift
         p.y += Math.sin(Date.now() * 0.0008) * 0.15;
@@ -182,13 +181,15 @@ function GalaxyStars() {
       });
 
       // C. Twinkling Stars & Floating Solar Embers
+      const maxAlpha = isDark ? 0.95 : 0.25;
+      const minAlpha = isDark ? 0.15 : 0.05;
       particles.forEach((pt) => {
         pt.alpha += pt.speed * pt.twinkleDir;
-        if (pt.alpha >= 0.95) {
-          pt.alpha = 0.95;
+        if (pt.alpha >= maxAlpha) {
+          pt.alpha = maxAlpha;
           pt.twinkleDir = -1;
-        } else if (pt.alpha <= 0.15) {
-          pt.alpha = 0.15;
+        } else if (pt.alpha <= minAlpha) {
+          pt.alpha = minAlpha;
           pt.twinkleDir = 1;
         }
 

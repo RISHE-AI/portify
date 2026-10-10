@@ -3,13 +3,14 @@ import { createPortal } from 'react-dom';
 import { Briefcase, GraduationCap, Calendar, MapPin, ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 
 function ExperienceEducation({ experience = [], education = [] }) {
-  const [expImageIndices, setExpImageIndices] = useState({});
+  const [expSlideState, setExpSlideState] = useState({});
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchCurrentX, setTouchCurrentX] = useState(0);
 
   // Lightbox Modal state for full-screen uncropped view
   const [expLightbox, setExpLightbox] = useState(null);
-  const [expLightboxIndex, setExpLightboxIndex] = useState(0);
+  const [expLightboxSlideInfo, setExpLightboxSlideInfo] = useState({ current: 0, prev: null, dir: 'next', step: 0 });
+  const expLightboxIndex = expLightboxSlideInfo.current;
   const [lightboxTouchStartX, setLightboxTouchStartX] = useState(0);
   const [lightboxTouchCurrentX, setLightboxTouchCurrentX] = useState(0);
 
@@ -50,9 +51,34 @@ function ExperienceEducation({ experience = [], education = [] }) {
     return [];
   };
 
+  // Automatic interval to slide all multi-image experience carousels in a 1 -> 2 -> 3 -> 1 -> 2 -> 3 sequence
+  useEffect(() => {
+    if (expLightbox) return;
+    const interval = setInterval(() => {
+      setExpSlideState((prev) => {
+        const nextState = { ...prev };
+        expList.forEach((exp) => {
+          const slides = getExpSlides(exp);
+          if (slides.length > 1) {
+            const cur = prev[exp.id]?.current || 0;
+            const next = (cur + 1) % slides.length;
+            nextState[exp.id] = {
+              current: next,
+              prev: cur,
+              dir: 'next',
+              step: (prev[exp.id]?.step || 0) + 1
+            };
+          }
+        });
+        return nextState;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [expList, expLightbox]);
+
   const openExpLightbox = (exp, slideIndex = 0) => {
     setExpLightbox(exp);
-    setExpLightboxIndex(slideIndex);
+    setExpLightboxSlideInfo({ current: slideIndex, prev: null, dir: 'next', step: 0 });
   };
 
   const closeExpLightbox = () => {
@@ -62,14 +88,54 @@ function ExperienceEducation({ experience = [], education = [] }) {
   const handleExpLightboxNext = () => {
     if (!expLightbox) return;
     const slides = getExpSlides(expLightbox);
-    setExpLightboxIndex((prev) => (prev + 1) % slides.length);
+    if (slides.length <= 1) return;
+    setExpLightboxSlideInfo((prev) => ({
+      current: (prev.current + 1) % slides.length,
+      prev: prev.current,
+      dir: 'next',
+      step: prev.step + 1
+    }));
   };
 
   const handleExpLightboxPrev = () => {
     if (!expLightbox) return;
     const slides = getExpSlides(expLightbox);
-    setExpLightboxIndex((prev) => (prev - 1 + slides.length) % slides.length);
+    if (slides.length <= 1) return;
+    setExpLightboxSlideInfo((prev) => ({
+      current: (prev.current - 1 + slides.length) % slides.length,
+      prev: prev.current,
+      dir: 'prev',
+      step: prev.step + 1
+    }));
   };
+
+  const setExpLightboxIndex = (targetIdx) => {
+    setExpLightboxSlideInfo((prev) => {
+      if (prev.current === targetIdx) return prev;
+      return {
+        current: targetIdx,
+        prev: prev.current,
+        dir: targetIdx > prev.current ? 'next' : 'prev',
+        step: prev.step + 1
+      };
+    });
+  };
+
+  // Auto-advance interval for open Experience Lightbox carousel
+  useEffect(() => {
+    if (!expLightbox) return;
+    const slides = getExpSlides(expLightbox);
+    if (slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setExpLightboxSlideInfo((prev) => ({
+        current: (prev.current + 1) % slides.length,
+        prev: prev.current,
+        dir: 'next',
+        step: prev.step + 1
+      }));
+    }, 3200);
+    return () => clearInterval(interval);
+  }, [expLightbox]);
 
   // Keyboard navigation for Experience Lightbox
   useEffect(() => {
@@ -85,18 +151,137 @@ function ExperienceEducation({ experience = [], education = [] }) {
 
   const handleNextExpImage = (e, expId, slideLength) => {
     if (e && e.stopPropagation) e.stopPropagation();
-    setExpImageIndices((prev) => ({
-      ...prev,
-      [expId]: ((prev[expId] || 0) + 1) % slideLength
-    }));
+    if (slideLength <= 1) return;
+    setExpSlideState((prev) => {
+      const cur = prev[expId]?.current || 0;
+      const next = (cur + 1) % slideLength;
+      return {
+        ...prev,
+        [expId]: {
+          current: next,
+          prev: cur,
+          dir: 'next',
+          step: (prev[expId]?.step || 0) + 1
+        }
+      };
+    });
   };
 
   const handlePrevExpImage = (e, expId, slideLength) => {
     if (e && e.stopPropagation) e.stopPropagation();
-    setExpImageIndices((prev) => ({
-      ...prev,
-      [expId]: ((prev[expId] || 0) - 1 + slideLength) % slideLength
-    }));
+    if (slideLength <= 1) return;
+    setExpSlideState((prev) => {
+      const cur = prev[expId]?.current || 0;
+      const next = (cur - 1 + slideLength) % slideLength;
+      return {
+        ...prev,
+        [expId]: {
+          current: next,
+          prev: cur,
+          dir: 'prev',
+          step: (prev[expId]?.step || 0) + 1
+        }
+      };
+    });
+  };
+
+  const handleSelectExpSlide = (expId, targetIdx) => {
+    setExpSlideState((prev) => {
+      const cur = prev[expId]?.current || 0;
+      if (cur === targetIdx) return prev;
+      return {
+        ...prev,
+        [expId]: {
+          current: targetIdx,
+          prev: cur,
+          dir: targetIdx > cur ? 'next' : 'prev',
+          step: (prev[expId]?.step || 0) + 1
+        }
+      };
+    });
+  };
+
+  const renderExpSlidingImages = (slides, expId, altPrefix, padding = '8px') => {
+    if (!slides || slides.length === 0) return null;
+    const info = expSlideState[expId] || { current: 0, prev: null, dir: 'next', step: 0 };
+    const activeIdx = info.current % slides.length;
+    const prevIdx = info.prev !== null ? info.prev % slides.length : null;
+    const dir = info.dir || 'next';
+    const step = info.step || 0;
+
+    if (prevIdx === null || prevIdx === activeIdx || slides.length === 1) {
+      return (
+        <img
+          src={slides[activeIdx]}
+          alt={`${altPrefix} slide ${activeIdx + 1}`}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            padding,
+            pointerEvents: 'none',
+            userSelect: 'none',
+            display: 'block'
+          }}
+          draggable={false}
+        />
+      );
+    }
+
+    const firstSlide = dir === 'prev' ? slides[activeIdx] : slides[prevIdx];
+    const secondSlide = dir === 'prev' ? slides[prevIdx] : slides[activeIdx];
+
+    return (
+      <div
+        key={step}
+        className={dir === 'prev' ? 'carousel-track-prev' : 'carousel-track-next'}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          display: 'flex',
+          width: '200%',
+          height: '100%',
+          pointerEvents: 'none',
+          userSelect: 'none'
+        }}
+      >
+        <div style={{ width: '50%', height: '100%', position: 'relative', flexShrink: 0 }}>
+          <img
+            src={firstSlide}
+            alt={`${altPrefix} prev`}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              padding,
+              display: 'block'
+            }}
+            draggable={false}
+          />
+        </div>
+        <div style={{ width: '50%', height: '100%', position: 'relative', flexShrink: 0 }}>
+          <img
+            src={secondSlide}
+            alt={`${altPrefix} slide ${activeIdx + 1}`}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              padding,
+              display: 'block'
+            }}
+            draggable={false}
+          />
+        </div>
+      </div>
+    );
   };
 
   const handleTouchStart = (e) => {
@@ -151,7 +336,7 @@ function ExperienceEducation({ experience = [], education = [] }) {
             <div className="d-flex flex-column gap-4">
               {expList.map((exp) => {
                 const slides = getExpSlides(exp);
-                const activeSlideIdx = expImageIndices[exp.id] || 0;
+                const activeSlideIdx = (expSlideState[exp.id]?.current || 0) % Math.max(1, slides.length);
 
                 return (
                   <div key={exp.id} className="card glass-card border-0 overflow-hidden">
@@ -171,23 +356,8 @@ function ExperienceEducation({ experience = [], education = [] }) {
                         onTouchEnd={() => handleTouchEnd(exp.id, slides.length)}
                         title="Click to view image in full-screen"
                       >
-                        {/* 100% Real-Size Uncropped Image */}
-                        <img
-                          src={slides[activeSlideIdx]}
-                          alt={`${exp.role} work preview`}
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'contain',
-                            padding: '8px',
-                            pointerEvents: 'none',
-                            userSelect: 'none',
-                            display: 'block'
-                          }}
-                          draggable={false}
-                        />
+                        {/* 100% Real-Size Uncropped Image with Continuous Right-Shift Sliding Effect */}
+                        {renderExpSlidingImages(slides, exp.id, `${exp.role} work preview`, '8px')}
 
                         {/* Expand Pill */}
                         <span
@@ -264,7 +434,7 @@ function ExperienceEducation({ experience = [], education = [] }) {
                                   }}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setExpImageIndices((prev) => ({ ...prev, [exp.id]: sIdx }));
+                                    handleSelectExpSlide(exp.id, sIdx);
                                   }}
                                 />
                               ))}
@@ -468,23 +638,76 @@ function ExperienceEducation({ experience = [], education = [] }) {
                 style={{
                   position: 'absolute',
                   inset: '8px 54px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  overflow: 'hidden'
                 }}
               >
-                <img
-                  src={getExpSlides(expLightbox)[expLightboxIndex]}
-                  alt={`${expLightbox.role} screenshot ${expLightboxIndex + 1}`}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    display: 'block',
-                    filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.75))'
-                  }}
-                  draggable={false}
-                />
+                {(() => {
+                  const lbSlides = getExpSlides(expLightbox);
+                  const activeIdx = expLightboxSlideInfo.current % Math.max(1, lbSlides.length);
+                  const prevIdx = expLightboxSlideInfo.prev !== null ? expLightboxSlideInfo.prev % Math.max(1, lbSlides.length) : null;
+                  const dir = expLightboxSlideInfo.dir || 'next';
+                  if (prevIdx === null || prevIdx === activeIdx || lbSlides.length <= 1) {
+                    return (
+                      <img
+                        src={lbSlides[activeIdx]}
+                        alt={`${expLightbox.role} screenshot ${activeIdx + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          display: 'block',
+                          filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.75))'
+                        }}
+                        draggable={false}
+                      />
+                    );
+                  }
+                  const firstSlide = dir === 'prev' ? lbSlides[activeIdx] : lbSlides[prevIdx];
+                  const secondSlide = dir === 'prev' ? lbSlides[prevIdx] : lbSlides[activeIdx];
+                  return (
+                    <div
+                      key={expLightboxSlideInfo.step}
+                      className={dir === 'prev' ? 'carousel-track-prev' : 'carousel-track-next'}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        display: 'flex',
+                        width: '200%',
+                        height: '100%'
+                      }}
+                    >
+                      <div style={{ width: '50%', height: '100%', position: 'relative', flexShrink: 0 }}>
+                        <img
+                          src={firstSlide}
+                          alt={`${expLightbox.role} prev`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            display: 'block',
+                            filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.75))'
+                          }}
+                          draggable={false}
+                        />
+                      </div>
+                      <div style={{ width: '50%', height: '100%', position: 'relative', flexShrink: 0 }}>
+                        <img
+                          src={secondSlide}
+                          alt={`${expLightbox.role} screenshot ${activeIdx + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            display: 'block',
+                            filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.75))'
+                          }}
+                          draggable={false}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Left Chevron */}
