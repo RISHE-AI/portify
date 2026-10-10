@@ -106,6 +106,9 @@ router.put('/profile', verifyToken, (req, res) => {
 // Projects Management
 router.post('/projects', verifyToken, (req, res) => {
   const db = readDB();
+  const slides = Array.isArray(req.body.slides)
+    ? req.body.slides
+    : (req.body.image ? [req.body.image] : []);
   const newProject = {
     id: 'proj-' + Date.now(),
     title: req.body.title || 'Untitled Project',
@@ -113,7 +116,8 @@ router.post('/projects', verifyToken, (req, res) => {
     detailedDescription: req.body.detailedDescription || '',
     technologies: Array.isArray(req.body.technologies) ? req.body.technologies : [],
     category: req.body.category || 'AI & ML',
-    image: req.body.image || '',
+    slides,
+    image: slides[0] || req.body.image || '',
     githubUrl: req.body.githubUrl || '',
     demoUrl: req.body.demoUrl || '',
     featured: req.body.featured ?? true,

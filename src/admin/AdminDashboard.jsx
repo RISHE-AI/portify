@@ -135,13 +135,31 @@ function AdminDashboard() {
     e.preventDefault();
     setSaving(true);
     try {
-      const slides = Array.isArray(editingProject.slides) ? editingProject.slides : [];
+      let slides = Array.isArray(editingProject.slides) ? [...editingProject.slides] : [];
+      if (newProjectSlideUrl && newProjectSlideUrl.trim()) {
+        slides.push(newProjectSlideUrl.trim());
+        setNewProjectSlideUrl('');
+      }
       const primaryImage = slides.length > 0 ? slides[0] : (editingProject.image || '');
+      const technologies =
+        typeof editingProject.technologiesText === 'string'
+          ? editingProject.technologiesText
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : Array.isArray(editingProject.technologies)
+            ? editingProject.technologies
+            : [];
+
       const projectToSave = {
         ...editingProject,
+        technologies,
         slides,
-        image: primaryImage
+        image: primaryImage,
+        featured: editingProject.featured ?? true,
+        published: editingProject.published ?? true
       };
+      delete projectToSave.technologiesText;
 
       if (editingProject.id) {
         await api.updateProject(editingProject.id, projectToSave);
@@ -165,6 +183,7 @@ function AdminDashboard() {
       : (proj.image ? [proj.image] : []);
     setEditingProject({
       ...proj,
+      technologiesText: Array.isArray(proj.technologies) ? proj.technologies.join(', ') : '',
       slides,
       image: slides[0] || proj.image || ''
     });
@@ -173,14 +192,17 @@ function AdminDashboard() {
   const handleAddProjectSlideUrl = () => {
     if (!newProjectSlideUrl.trim() || !editingProject) return;
     const url = newProjectSlideUrl.trim();
-    const currentSlides = Array.isArray(editingProject.slides)
-      ? editingProject.slides
-      : (editingProject.image ? [editingProject.image] : []);
-    const updated = [...currentSlides, url];
-    setEditingProject({
-      ...editingProject,
-      slides: updated,
-      image: updated[0] || ''
+    setEditingProject((prev) => {
+      if (!prev) return prev;
+      const currentSlides = Array.isArray(prev.slides)
+        ? prev.slides
+        : (prev.image ? [prev.image] : []);
+      const updated = [...currentSlides, url];
+      return {
+        ...prev,
+        slides: updated,
+        image: updated[0] || ''
+      };
     });
     setNewProjectSlideUrl('');
     showBanner('success', 'Image URL added to project slides!');
@@ -200,15 +222,18 @@ function AdminDashboard() {
         }
       }
       if (urls.length > 0) {
-        const currentSlides = Array.isArray(editingProject.slides)
-          ? editingProject.slides
-          : (editingProject.image ? [editingProject.image] : []);
-        const updated = [...currentSlides, ...urls];
-        setEditingProject((prev) => ({
-          ...prev,
-          slides: updated,
-          image: updated[0] || prev?.image || ''
-        }));
+        setEditingProject((prev) => {
+          if (!prev) return prev;
+          const currentSlides = Array.isArray(prev.slides)
+            ? prev.slides
+            : (prev.image ? [prev.image] : []);
+          const updated = [...currentSlides, ...urls];
+          return {
+            ...prev,
+            slides: updated,
+            image: updated[0] || prev.image || ''
+          };
+        });
         showBanner('success', `${urls.length} image(s) uploaded successfully!`);
       }
     } catch (err) {
@@ -643,12 +668,14 @@ function AdminDashboard() {
                 <p>Manage all projects shown on your portfolio website.</p>
               </div>
               <button
-                onClick={() =>
+                onClick={() => {
+                  setNewProjectSlideUrl('');
                   setEditingProject({
                     title: '',
                     shortDescription: '',
                     detailedDescription: '',
                     technologies: [],
+                    technologiesText: '',
                     category: 'AI & ML',
                     image: '',
                     slides: [],
@@ -656,8 +683,8 @@ function AdminDashboard() {
                     demoUrl: '',
                     featured: true,
                     published: true
-                  })
-                }
+                  });
+                }}
                 className={styles.addBtn}
               >
                 <Plus size={18} />
@@ -693,8 +720,13 @@ function AdminDashboard() {
                       </td>
                       <td>
                         <div className={styles.thumbWrapper}>
-                          {proj.image ? (
-                            <img src={proj.image} alt={proj.title} className={styles.thumbImg} />
+                          {(proj.slides && proj.slides[0]) || proj.image ? (
+                            <img
+                              src={(proj.slides && proj.slides[0]) || proj.image}
+                              alt={proj.title}
+                              className={styles.thumbImg}
+                              style={{ objectFit: 'contain', backgroundColor: '#0b0f19' }}
+                            />
                           ) : (
                             <div className={styles.noThumb}>No Img</div>
                           )}
@@ -800,10 +832,17 @@ function AdminDashboard() {
                       <label>Technologies (comma separated)</label>
                       <input
                         type="text"
-                        value={Array.isArray(editingProject.technologies) ? editingProject.technologies.join(', ') : ''}
+                        value={
+                          editingProject.technologiesText !== undefined
+                            ? editingProject.technologiesText
+                            : Array.isArray(editingProject.technologies)
+                              ? editingProject.technologies.join(', ')
+                              : ''
+                        }
                         onChange={(e) =>
                           setEditingProject({
                             ...editingProject,
+                            technologiesText: e.target.value,
                             technologies: e.target.value
                               .split(',')
                               .map((s) => s.trim())
@@ -898,16 +937,16 @@ function AdminDashboard() {
                                 borderRadius: '8px',
                                 overflow: 'hidden',
                                 border: sIdx === 0 ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                                backgroundColor: 'var(--bg-secondary)',
+                                backgroundColor: '#0b0f19',
                                 display: 'flex',
                                 flexDirection: 'column'
                               }}
                             >
-                              <div style={{ position: 'relative', height: '80px', width: '100%' }}>
+                              <div style={{ position: 'relative', height: '80px', width: '100%', backgroundColor: '#0b0f19' }}>
                                 <img
                                   src={slideUrl}
                                   alt={`Slide ${sIdx + 1}`}
-                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                                 />
                                 {sIdx === 0 ? (
                                   <span
@@ -1011,7 +1050,8 @@ function AdminDashboard() {
                       <div className={styles.fieldGroup}>
                         <label>GitHub Repository URL</label>
                         <input
-                          type="url"
+                          type="text"
+                          placeholder="https://github.com/..."
                           value={editingProject.githubUrl || ''}
                           onChange={(e) => setEditingProject({ ...editingProject, githubUrl: e.target.value })}
                           className={styles.input}
@@ -1020,7 +1060,8 @@ function AdminDashboard() {
                       <div className={styles.fieldGroup}>
                         <label>Live Demo URL</label>
                         <input
-                          type="url"
+                          type="text"
+                          placeholder="https://..."
                           value={editingProject.demoUrl || ''}
                           onChange={(e) => setEditingProject({ ...editingProject, demoUrl: e.target.value })}
                           className={styles.input}
@@ -1051,9 +1092,9 @@ function AdminDashboard() {
                       <button type="button" onClick={() => setEditingProject(null)} className={styles.cancelBtn}>
                         Cancel
                       </button>
-                      <button type="submit" disabled={saving} className={styles.saveBtn}>
+                      <button type="submit" disabled={saving || uploadingImage} className={styles.saveBtn}>
                         <Save size={16} />
-                        <span>{saving ? 'Saving...' : 'Save Project'}</span>
+                        <span>{uploadingImage ? 'Uploading Images...' : saving ? 'Saving...' : 'Save Project'}</span>
                       </button>
                     </div>
                   </form>

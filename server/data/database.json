@@ -39,6 +39,42 @@
   },
   "projects": [
     {
+      "id": "proj-1791646737085",
+      "title": "Maghizam Delights",
+      "shortDescription": "A full-stack food and sweets e-commerce platform that showcases delicious homemade treats and allows customers to explore products, view details, and place orders through a user-friendly shopping experience.",
+      "detailedDescription": "Maghizam Delights is a full-stack e-commerce web application designed to bring traditional sweets and delicious food products online. The platform provides an attractive product catalog, intuitive navigation, and a seamless shopping experience across desktop and mobile devices.\n\nThe frontend delivers a responsive interface for browsing products, viewing product details, selecting quantities, and managing shopping cart interactions. The backend handles application logic, product management, order processing, and communication with the database.\n\nThe application can also include an administrative dashboard for managing product listings, updating prices and stock availability, and maintaining product information efficiently.\n\nKey Features:\n\nResponsive and user-friendly e-commerce interface\n\nProduct catalog with images, descriptions, and pricing\n\nProduct quantity selection and shopping cart functionality\n\nOrder management and checkout workflow\n\nAdmin dashboard for product and inventory management\n\nMobile-friendly design and intuitive navigation",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "React.js",
+        "Node.js",
+        "Express.js",
+        "MongoDB",
+        "REST API"
+      ],
+      "category": "Full Stack Web",
+      "slides": [
+        "/uploads/file-1791646733465-268079621.png",
+        "/uploads/file-1791646733509-39596730.png",
+        "/uploads/file-1791646733568-489458704.png",
+        "/uploads/file-1791646733591-116699864.png",
+        "/uploads/file-1791646733624-81545049.png",
+        "/uploads/file-1791646733690-583857371.png",
+        "/uploads/file-1791646733772-817543425.png",
+        "/uploads/file-1791646733838-531299448.png",
+        "/uploads/file-1791646733874-393324046.png",
+        "/uploads/file-1791646733919-515542797.png"
+      ],
+      "image": "/uploads/file-1791646733465-268079621.png",
+      "githubUrl": "",
+      "demoUrl": "",
+      "featured": true,
+      "published": true,
+      "order": 1,
+      "createdAt": "2026-10-10T15:38:57.085Z"
+    },
+    {
       "id": "proj-1",
       "title": "Plant Disease Prediction",
       "shortDescription": "CNN-based plant disease prediction system to classify plant diseases from leaf images for early and accurate disease detection.",
@@ -52,13 +88,48 @@
         "React.js"
       ],
       "category": "AI & ML",
-      "image": "",
+      "image": "/uploads/file-1791647291891-252756925.jpg",
       "githubUrl": "https://github.com/RISHE-AI",
       "demoUrl": "",
       "featured": true,
       "published": true,
-      "order": 1,
-      "createdAt": "2026-10-09T15:45:20.434Z"
+      "order": 2,
+      "createdAt": "2026-10-09T15:45:20.434Z",
+      "slides": [
+        "/uploads/file-1791647291891-252756925.jpg",
+        "/uploads/file-1791647291961-232877920.jpg"
+      ]
+    },
+    {
+      "id": "proj-3",
+      "title": "Pluto Intero — Frontend Designer / Developer",
+      "shortDescription": "Worked as a Frontend Designer / Developer at Pluto Intero, focusing on building responsive, visually appealing, and user-friendly web interfaces with an emphasis on modern UI/UX design and frontend development practices.",
+      "detailedDescription": "Contributed to frontend design and development, transforming UI concepts into interactive and responsive web experiences. Focused on creating clean layouts, reusable UI components, intuitive navigation, and consistent visual styling to improve usability across different screen sizes.\n\nKey Responsibilities:\n\nDesigned and developed responsive web interfaces.\n\nImplemented modern UI layouts and reusable frontend components.\n\nApplied UI/UX principles to improve accessibility, usability, and visual consistency.\n\nOptimized page layouts for desktop and mobile devices.\n\nCollaborated on frontend implementation and interface improvements.\n\nTested and refined UI elements to ensure a smooth user experience.",
+      "technologies": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "React.js",
+        "Tailwind CSS",
+        "Responsive Web Design"
+      ],
+      "category": "Full Stack Web",
+      "image": "/uploads/file-1791646615154-628619865.png",
+      "githubUrl": "https://github.com/RISHE-AI",
+      "demoUrl": "",
+      "featured": true,
+      "published": true,
+      "order": 3,
+      "createdAt": "2026-10-09T15:45:20.435Z",
+      "slides": [
+        "/uploads/file-1791646615154-628619865.png",
+        "/uploads/file-1791646615212-989605344.png",
+        "/uploads/file-1791646615274-199112348.png",
+        "/uploads/file-1791646615332-170032846.png",
+        "/uploads/file-1791646615379-186652686.png",
+        "/uploads/file-1791646615415-627209144.png",
+        "/uploads/file-1791646615464-240993941.png"
+      ]
     },
     {
       "id": "proj-2",
@@ -74,50 +145,37 @@
         "React JS"
       ],
       "category": "AI & ML",
-      "image": "",
+      "image": "/uploads/file-1791646494747-644878260.png",
       "githubUrl": "https://github.com/RISHE-AI",
       "demoUrl": "",
       "featured": true,
       "published": true,
-      "order": 2,
-      "createdAt": "2026-10-09T15:45:20.435Z"
-    },
-    {
-      "id": "proj-3",
-      "title": "AI Study Buddy (Math Bot)",
-      "shortDescription": "AI-powered math assistant that solves problems from text, images, camera input, and handwritten equations.",
-      "detailedDescription": "Created MathBot, an interactive AI study companion designed to solve mathematical problems across multiple input formats. Utilizes OCR engines and Computer Vision to extract handwritten or typed math equations, passing them to reasoning models to produce step-by-step explanations.",
-      "technologies": [
-        "Python",
-        "OCR",
-        "Computer Vision",
-        "LLM",
-        "OpenCV",
-        "React JS",
-        "MongoDB"
-      ],
-      "category": "AI & ML",
-      "image": "",
-      "githubUrl": "https://github.com/RISHE-AI",
-      "demoUrl": "",
-      "featured": true,
-      "published": true,
-      "order": 3,
-      "createdAt": "2026-10-09T15:45:20.435Z"
+      "order": 4,
+      "createdAt": "2026-10-09T15:45:20.435Z",
+      "slides": [
+        "/uploads/file-1791646494747-644878260.png",
+        "/uploads/file-1791646494788-67102310.png",
+        "/uploads/file-1791646494822-66274004.png"
+      ]
     }
   ],
   "experience": [
     {
       "slides": [
-        "/assets/travel.png",
-        "/assets/portfolio.png"
+        "/uploads/file-1791646933613-958802589.png",
+        "/uploads/file-1791646944154-958251776.png",
+        "/uploads/file-1791646996095-981250999.png",
+        "/uploads/file-1791647005632-816162690.png",
+        "/uploads/file-1791647015140-939592464.png",
+        "/uploads/file-1791647023358-417866742.png",
+        "/uploads/file-1791647030241-930343682.png"
       ],
       "id": "exp-1",
       "role": "Full Stack Website Development",
       "company": "Pluto Intero",
       "location": "Remote",
-      "period": "2024 - Present",
-      "description": "Developed a full-stack website for a startup focused on selling eco-friendly decoration lamps made from reused plastics. Implemented features for product display, user authentication, and online interaction using the MERN stack and Firebase.",
+      "period": "2025",
+      "description": "Developed a full-stack website for a startup focused on selling eco-friendly decoration lamps made from reused plastics. Implemented features for product display, user authentication, and online interaction using the MERN stack and Firebase.\n\nContributed to frontend design and development, transforming UI concepts into interactive and responsive web experiences. Focused on creating clean layouts, reusable UI components, intuitive navigation, and consistent visual styling to improve usability across different screen sizes",
       "technologies": [
         "React.js",
         "Node.js",
@@ -125,7 +183,8 @@
         "MongoDB",
         "Firebase"
       ],
-      "order": 1
+      "order": 1,
+      "image": "/uploads/file-1791646933613-958802589.png"
     }
   ],
   "education": [

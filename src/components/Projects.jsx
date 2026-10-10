@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ExternalLink, Sparkles, X, ChevronRight, ChevronLeft, Maximize2 } from 'lucide-react';
 import { GithubIcon } from './Icons';
 import plantImg from '../assets/c19.png';
@@ -17,8 +18,6 @@ function Projects({ projects = [] }) {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxTouchStartX, setLightboxTouchStartX] = useState(0);
   const [lightboxTouchCurrentX, setLightboxTouchCurrentX] = useState(0);
-
-  const categories = ['All', 'AI & ML', 'Full Stack Web'];
 
   const defaultProjects = [
     {
@@ -63,6 +62,8 @@ function Projects({ projects = [] }) {
   ];
 
   const displayList = (projects.length > 0 ? projects : defaultProjects).filter((p) => p.published !== false);
+
+  const categories = ['All', ...new Set(['AI & ML', 'Full Stack Web', ...displayList.map((p) => p.category).filter(Boolean)])];
 
   const filteredProjects = displayList.filter((proj) => {
     if (activeCategory === 'All') return true;
@@ -189,10 +190,10 @@ function Projects({ projects = [] }) {
                 <div className="card glass-card h-100 border-0 overflow-hidden d-flex flex-column">
                   {/* Card Image Banner with Mini Slide Controls, Finger Swipe & Click to Expand */}
                   <div
-                    className="position-relative overflow-hidden user-select-none d-flex align-items-center justify-content-center"
+                    className="position-relative overflow-hidden user-select-none"
                     style={{
-                      height: '210px',
-                      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                      height: '220px',
+                      backgroundColor: '#0b0f19',
                       touchAction: 'pan-y',
                       cursor: 'pointer'
                     }}
@@ -202,35 +203,20 @@ function Projects({ projects = [] }) {
                     onTouchEnd={() => handleTouchEnd(proj.id, slides.length)}
                     title="Click to view image in full-screen carousel"
                   >
-                    {/* Ambient subtle blurred backdrop */}
-                    <img
-                      src={slides[activeSlideIdx]}
-                      alt=""
-                      aria-hidden="true"
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        filter: 'blur(20px) brightness(0.35)',
-                        transform: 'scale(1.2)',
-                        opacity: 0.55,
-                        pointerEvents: 'none'
-                      }}
-                    />
-
-                    {/* True Real-Size Uncropped Foreground Image */}
+                    {/* 100% Real-Size Uncropped Image */}
                     <img
                       src={slides[activeSlideIdx]}
                       alt={`${proj.title} slide ${activeSlideIdx + 1}`}
-                      className="position-relative w-100 h-100"
                       style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
                         objectFit: 'contain',
+                        padding: '8px',
                         pointerEvents: 'none',
                         userSelect: 'none',
-                        padding: '6px'
+                        display: 'block'
                       }}
                       draggable={false}
                     />
@@ -439,342 +425,396 @@ function Projects({ projects = [] }) {
         </div>
       </div>
 
-      {/* Case Study Modal */}
-      {selectedProject && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3 animate-fade-in"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 2000
-          }}
-          onClick={() => setSelectedProject(null)}
-        >
+      {/* Case Study Modal rendered at document.body level above Navbar */}
+      {selectedProject &&
+        createPortal(
           <div
-            className="card glass-card p-4 rounded-4 position-relative border"
-            style={{ width: '100%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}
-            onClick={(e) => e.stopPropagation()}
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3 animate-fade-in"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.85)',
+              backdropFilter: 'blur(8px)',
+              zIndex: 99998
+            }}
+            onClick={() => setSelectedProject(null)}
           >
-            <button
-              className="btn btn-sm position-absolute top-0 end-0 m-3 rounded-circle p-1"
-              style={{ color: 'var(--text-primary)' }}
-              onClick={() => setSelectedProject(null)}
-            >
-              <X size={20} />
-            </button>
-
-            <span className="badge rounded-pill mb-2 align-self-start" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent-primary)' }}>
-              {selectedProject.category || 'AI & ML'}
-            </span>
-
-            <h2 className="h4 fw-bold mb-3" style={{ color: 'var(--text-primary)' }}>
-              {selectedProject.title}
-            </h2>
-
             <div
-              className="rounded-3 overflow-hidden mb-3 user-select-none position-relative d-flex align-items-center justify-content-center"
-              style={{
-                height: '250px',
-                backgroundColor: 'rgba(0, 0, 0, 0.45)',
-                touchAction: 'pan-y',
-                cursor: 'pointer'
-              }}
-              onClick={() => {
-                const currentIdx = cardImageIndices[selectedProject.id] || 0;
-                openLightbox(selectedProject, currentIdx);
-              }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={() => handleTouchEnd(selectedProject.id, getProjectSlides(selectedProject).length)}
-              title="Click to view full-screen image carousel"
+              className="card glass-card p-4 rounded-4 position-relative border"
+              style={{ width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto' }}
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Ambient blurred backdrop */}
-              <img
-                src={getProjectSlides(selectedProject)[cardImageIndices[selectedProject.id] || 0]}
-                alt=""
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  filter: 'blur(22px) brightness(0.35)',
-                  transform: 'scale(1.2)',
-                  opacity: 0.55,
-                  pointerEvents: 'none'
-                }}
-              />
-
-              {/* Real uncropped image */}
-              <img
-                src={getProjectSlides(selectedProject)[cardImageIndices[selectedProject.id] || 0]}
-                alt={selectedProject.title}
-                className="position-relative w-100 h-100"
-                style={{
-                  objectFit: 'contain',
-                  pointerEvents: 'none',
-                  userSelect: 'none',
-                  padding: '6px'
-                }}
-                draggable={false}
-              />
-              <span
-                className="position-absolute d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 small"
-                style={{
-                  bottom: '10px',
-                  right: '10px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.72)',
-                  backdropFilter: 'blur(6px)',
-                  color: '#ffffff',
-                  fontSize: '0.72rem'
-                }}
-              >
-                <Maximize2 size={12} />
-                <span>Expand Image ({getProjectSlides(selectedProject).length})</span>
-              </span>
-            </div>
-
-            <div className="mb-3">
-              <h4 className="h6 fw-bold mb-2" style={{ color: 'var(--accent-primary)' }}>
-                Overview & Architecture
-              </h4>
-              <div
-                className="small"
-                style={{
-                  color: 'var(--text-secondary)',
-                  lineHeight: 1.75,
-                  whiteSpace: 'pre-line',
-                  wordBreak: 'break-word',
-                  fontSize: '0.92rem'
-                }}
-              >
-                {selectedProject.detailedDescription || selectedProject.shortDescription}
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <h4 className="h6 fw-bold mb-2" style={{ color: 'var(--accent-primary)' }}>
-                Technologies Used
-              </h4>
-              <div className="d-flex flex-wrap gap-2">
-                {selectedProject.technologies?.map((tech, i) => (
-                  <span key={i} className="badge p-2 rounded" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent-primary)' }}>
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="d-flex flex-wrap gap-2">
-              {selectedProject.githubUrl && (
-                <a
-                  href={selectedProject.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-custom-primary text-decoration-none"
-                >
-                  <GithubIcon size={16} />
-                  <span>GitHub Repository</span>
-                </a>
-              )}
-              {selectedProject.demoUrl && (
-                <a
-                  href={selectedProject.demoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-custom-secondary text-decoration-none"
-                >
-                  <ExternalLink size={16} />
-                  <span>Live Demo</span>
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* High-Resolution Image Carousel / Lightbox Modal */}
-      {lightboxProject && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-between p-3 animate-fade-in"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.94)',
-            backdropFilter: 'blur(12px)',
-            zIndex: 3000,
-            userSelect: 'none'
-          }}
-          onClick={closeLightbox}
-        >
-          {/* Lightbox Header Bar */}
-          <div
-            className="w-100 d-flex align-items-center justify-content-between px-3 py-2"
-            style={{ maxWidth: '1100px' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="d-flex align-items-center gap-2">
-              <span
-                className="badge rounded-pill px-2 py-1 text-uppercase"
-                style={{ backgroundColor: 'var(--accent-primary)', color: '#ffffff', fontSize: '0.72rem' }}
-              >
-                {lightboxProject.category || 'AI & ML'}
-              </span>
-              <h3 className="h6 mb-0 text-white fw-bold text-truncate" style={{ maxWidth: '350px' }}>
-                {lightboxProject.title}
-              </h3>
-            </div>
-
-            <div className="d-flex align-items-center gap-3">
-              <span className="small text-white-50 fw-semibold">
-                {lightboxIndex + 1} / {getProjectSlides(lightboxProject).length}
-              </span>
               <button
-                className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center"
-                style={{ width: '38px', height: '38px', borderColor: 'rgba(255,255,255,0.3)' }}
-                onClick={closeLightbox}
-                aria-label="Close lightbox"
+                className="btn btn-sm position-absolute top-0 end-0 m-3 rounded-circle p-1"
+                style={{ color: 'var(--text-primary)', zIndex: 5 }}
+                onClick={() => setSelectedProject(null)}
               >
                 <X size={20} />
               </button>
-            </div>
-          </div>
 
-          {/* Main Stage Image with Controls and Swipe */}
-          <div
-            className="position-relative w-100 d-flex align-items-center justify-content-center flex-grow-1 my-2 overflow-hidden"
-            style={{ maxWidth: '1100px', maxHeight: '76vh', touchAction: 'pan-y' }}
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={(e) => {
-              if (e.touches && e.touches.length > 0) {
-                setLightboxTouchStartX(e.touches[0].clientX);
-                setLightboxTouchCurrentX(e.touches[0].clientX);
-              }
-            }}
-            onTouchMove={(e) => {
-              if (e.touches && e.touches.length > 0) {
-                setLightboxTouchCurrentX(e.touches[0].clientX);
-              }
-            }}
-            onTouchEnd={() => {
-              const deltaX = lightboxTouchStartX - lightboxTouchCurrentX;
-              const slides = getProjectSlides(lightboxProject);
-              if (deltaX > 40 && slides.length > 1) {
-                handleLightboxNext();
-              } else if (deltaX < -40 && slides.length > 1) {
-                handleLightboxPrev();
-              }
-              setLightboxTouchStartX(0);
-              setLightboxTouchCurrentX(0);
-            }}
-          >
-            <img
-              src={getProjectSlides(lightboxProject)[lightboxIndex]}
-              alt={`${lightboxProject.title} screenshot ${lightboxIndex + 1}`}
-              className="img-fluid rounded-3 shadow-lg"
-              style={{
-                maxHeight: '74vh',
-                maxWidth: '92vw',
-                objectFit: 'contain',
-                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)'
-              }}
-              draggable={false}
-            />
+              <span className="badge rounded-pill mb-2 align-self-start" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent-primary)' }}>
+                {selectedProject.category || 'AI & ML'}
+              </span>
 
-            {/* Left Chevron */}
-            {getProjectSlides(lightboxProject).length > 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLightboxPrev();
-                }}
-                className="btn position-absolute top-50 start-0 translate-middle-y rounded-circle d-flex align-items-center justify-content-center ms-2 ms-md-4 shadow"
-                style={{
-                  width: '46px',
-                  height: '46px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.75)',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  color: '#ffffff'
-                }}
-                aria-label="Previous screenshot"
-              >
-                <ChevronLeft size={24} />
-              </button>
-            )}
+              <h2 className="h4 fw-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+                {selectedProject.title}
+              </h2>
 
-            {/* Right Chevron */}
-            {getProjectSlides(lightboxProject).length > 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLightboxNext();
-                }}
-                className="btn position-absolute top-50 end-0 translate-middle-y rounded-circle d-flex align-items-center justify-content-center me-2 me-md-4 shadow"
-                style={{
-                  width: '46px',
-                  height: '46px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.75)',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  color: '#ffffff'
-                }}
-                aria-label="Next screenshot"
-              >
-                <ChevronRight size={24} />
-              </button>
-            )}
-          </div>
-
-          {/* Lightbox Footer & Thumbnail Strip */}
-          <div
-            className="w-100 d-flex flex-column align-items-center gap-2 pb-2"
-            style={{ maxWidth: '1100px' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Thumbnail Strip */}
-            {getProjectSlides(lightboxProject).length > 1 && (
               <div
-                className="d-flex align-items-center gap-2 overflow-x-auto py-2 px-3 rounded-pill"
+                className="rounded-3 overflow-hidden mb-3 user-select-none position-relative"
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                  maxWidth: '90vw',
-                  scrollbarWidth: 'none'
+                  height: '280px',
+                  backgroundColor: '#0b0f19',
+                  touchAction: 'pan-y',
+                  cursor: 'pointer'
+                }}
+                onClick={() => {
+                  const currentIdx = cardImageIndices[selectedProject.id] || 0;
+                  openLightbox(selectedProject, currentIdx);
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={() => handleTouchEnd(selectedProject.id, getProjectSlides(selectedProject).length)}
+                title="Click to view full-screen image carousel"
+              >
+                {/* 100% Real Uncropped Image */}
+                <img
+                  src={getProjectSlides(selectedProject)[cardImageIndices[selectedProject.id] || 0]}
+                  alt={selectedProject.title}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    padding: '10px',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                    display: 'block'
+                  }}
+                  draggable={false}
+                />
+
+                {getProjectSlides(selectedProject).length > 1 && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCardPrevImage(e, selectedProject.id, getProjectSlides(selectedProject).length);
+                      }}
+                      className="btn position-absolute top-50 start-0 translate-middle-y d-flex align-items-center justify-content-center p-0 rounded-circle ms-2"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        color: '#ffffff',
+                        zIndex: 3
+                      }}
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCardNextImage(e, selectedProject.id, getProjectSlides(selectedProject).length);
+                      }}
+                      className="btn position-absolute top-50 end-0 translate-middle-y d-flex align-items-center justify-content-center p-0 rounded-circle me-2"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        color: '#ffffff',
+                        zIndex: 3
+                      }}
+                      aria-label="Next image"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </>
+                )}
+
+                <span
+                  className="position-absolute d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 small"
+                  style={{
+                    bottom: '10px',
+                    right: '10px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                    backdropFilter: 'blur(6px)',
+                    color: '#ffffff',
+                    fontSize: '0.72rem',
+                    zIndex: 3
+                  }}
+                >
+                  <Maximize2 size={12} />
+                  <span>Expand Image ({getProjectSlides(selectedProject).length})</span>
+                </span>
+              </div>
+
+              <div className="mb-3">
+                <h4 className="h6 fw-bold mb-2" style={{ color: 'var(--accent-primary)' }}>
+                  Overview & Architecture
+                </h4>
+                <div
+                  className="small"
+                  style={{
+                    color: 'var(--text-secondary)',
+                    lineHeight: 1.75,
+                    whiteSpace: 'pre-line',
+                    wordBreak: 'break-word',
+                    fontSize: '0.92rem'
+                  }}
+                >
+                  {selectedProject.detailedDescription || selectedProject.shortDescription}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="h6 fw-bold mb-2" style={{ color: 'var(--accent-primary)' }}>
+                  Technologies Used
+                </h4>
+                <div className="d-flex flex-wrap gap-2">
+                  {selectedProject.technologies?.map((tech, i) => (
+                    <span key={i} className="badge p-2 rounded" style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent-primary)' }}>
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="d-flex flex-wrap gap-2">
+                {selectedProject.githubUrl && (
+                  <a
+                    href={selectedProject.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-custom-primary text-decoration-none"
+                  >
+                    <GithubIcon size={16} />
+                    <span>GitHub Repository</span>
+                  </a>
+                )}
+                {selectedProject.demoUrl && (
+                  <a
+                    href={selectedProject.demoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-custom-secondary text-decoration-none"
+                  >
+                    <ExternalLink size={16} />
+                    <span>Live Demo</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* High-Resolution Image Carousel / Lightbox Modal rendered via createPortal above Navbar */}
+      {lightboxProject &&
+        createPortal(
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-between p-2 p-md-3 animate-fade-in"
+            style={{
+              backgroundColor: 'rgba(5, 8, 16, 0.96)',
+              backdropFilter: 'blur(14px)',
+              zIndex: 99999,
+              userSelect: 'none'
+            }}
+            onClick={closeLightbox}
+          >
+            {/* Lightbox Header Bar */}
+            <div
+              className="w-100 d-flex align-items-center justify-content-between px-3 py-2 flex-shrink-0"
+              style={{ maxWidth: '1200px' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="d-flex align-items-center gap-2 overflow-hidden">
+                <span
+                  className="badge rounded-pill px-2 py-1 text-uppercase flex-shrink-0"
+                  style={{ backgroundColor: 'var(--accent-primary)', color: '#ffffff', fontSize: '0.72rem' }}
+                >
+                  {lightboxProject.category || 'AI & ML'}
+                </span>
+                <h3 className="h6 mb-0 text-white fw-bold text-truncate">
+                  {lightboxProject.title}
+                </h3>
+              </div>
+
+              <div className="d-flex align-items-center gap-3 flex-shrink-0 ms-2">
+                <span className="small text-white-50 fw-semibold">
+                  {lightboxIndex + 1} / {getProjectSlides(lightboxProject).length}
+                </span>
+                <button
+                  className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center"
+                  style={{ width: '38px', height: '38px', borderColor: 'rgba(255,255,255,0.35)' }}
+                  onClick={closeLightbox}
+                  aria-label="Close lightbox"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Main Stage Image with Controls and Swipe — 100% Uncropped Fit */}
+            <div
+              className="position-relative w-100"
+              style={{
+                flex: '1 1 0%',
+                minHeight: 0,
+                maxWidth: '1200px',
+                touchAction: 'pan-y'
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onTouchStart={(e) => {
+                if (e.touches && e.touches.length > 0) {
+                  setLightboxTouchStartX(e.touches[0].clientX);
+                  setLightboxTouchCurrentX(e.touches[0].clientX);
+                }
+              }}
+              onTouchMove={(e) => {
+                if (e.touches && e.touches.length > 0) {
+                  setLightboxTouchCurrentX(e.touches[0].clientX);
+                }
+              }}
+              onTouchEnd={() => {
+                const deltaX = lightboxTouchStartX - lightboxTouchCurrentX;
+                const slides = getProjectSlides(lightboxProject);
+                if (deltaX > 40 && slides.length > 1) {
+                  handleLightboxNext();
+                } else if (deltaX < -40 && slides.length > 1) {
+                  handleLightboxPrev();
+                }
+                setLightboxTouchStartX(0);
+                setLightboxTouchCurrentX(0);
+              }}
+            >
+              {/* Absolute stage box guaranteeing 100% of image height & width fit with zero clipping */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: '8px 54px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
-                {getProjectSlides(lightboxProject).map((slideUrl, sIdx) => (
-                  <button
-                    key={sIdx}
-                    onClick={() => setLightboxIndex(sIdx)}
-                    className="p-0 border-0 rounded overflow-hidden"
-                    style={{
-                      width: '48px',
-                      height: '36px',
-                      opacity: lightboxIndex === sIdx ? 1 : 0.45,
-                      outline: lightboxIndex === sIdx ? '2px solid var(--accent-primary)' : 'none',
-                      transition: 'all 0.2s ease',
-                      flexShrink: 0
-                    }}
-                  >
-                    <img src={slideUrl} alt={`Thumb ${sIdx + 1}`} className="w-100 h-100 object-fit-cover" />
-                  </button>
-                ))}
+                <img
+                  src={getProjectSlides(lightboxProject)[lightboxIndex]}
+                  alt={`${lightboxProject.title} screenshot ${lightboxIndex + 1}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    display: 'block',
+                    filter: 'drop-shadow(0 16px 40px rgba(0, 0, 0, 0.75))'
+                  }}
+                  draggable={false}
+                />
               </div>
-            )}
 
-            {/* Quick Action Button: View Full Project Details */}
-            <button
-              onClick={() => {
-                const targetProj = lightboxProject;
-                closeLightbox();
-                setSelectedProject(targetProj);
-              }}
-              className="btn btn-sm btn-custom-primary rounded-pill px-4 py-2 mt-1"
+              {/* Left Chevron */}
+              {getProjectSlides(lightboxProject).length > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLightboxPrev();
+                  }}
+                  className="btn position-absolute top-50 start-0 translate-middle-y rounded-circle d-flex align-items-center justify-content-center ms-1 ms-md-2 shadow"
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    color: '#ffffff',
+                    zIndex: 5
+                  }}
+                  aria-label="Previous screenshot"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+              )}
+
+              {/* Right Chevron */}
+              {getProjectSlides(lightboxProject).length > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLightboxNext();
+                  }}
+                  className="btn position-absolute top-50 end-0 translate-middle-y rounded-circle d-flex align-items-center justify-content-center me-1 me-md-2 shadow"
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    color: '#ffffff',
+                    zIndex: 5
+                  }}
+                  aria-label="Next screenshot"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              )}
+            </div>
+
+            {/* Lightbox Footer & Thumbnail Strip */}
+            <div
+              className="w-100 d-flex flex-column align-items-center gap-2 pt-2 pb-1 flex-shrink-0"
+              style={{ maxWidth: '1200px' }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <span>View Full Project Details</span>
-              <ChevronRight size={15} />
-            </button>
-          </div>
-        </div>
-      )}
+              {/* Thumbnail Strip */}
+              {getProjectSlides(lightboxProject).length > 1 && (
+                <div
+                  className="d-flex align-items-center gap-2 overflow-x-auto py-2 px-3 rounded-pill"
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    maxWidth: '92vw',
+                    scrollbarWidth: 'none'
+                  }}
+                >
+                  {getProjectSlides(lightboxProject).map((slideUrl, sIdx) => (
+                    <button
+                      key={sIdx}
+                      onClick={() => setLightboxIndex(sIdx)}
+                      className="p-0 border-0 rounded overflow-hidden"
+                      style={{
+                        width: '54px',
+                        height: '38px',
+                        backgroundColor: '#0b0f19',
+                        opacity: lightboxIndex === sIdx ? 1 : 0.45,
+                        outline: lightboxIndex === sIdx ? '2px solid var(--accent-primary)' : 'none',
+                        transition: 'all 0.2s ease',
+                        flexShrink: 0
+                      }}
+                    >
+                      <img
+                        src={slideUrl}
+                        alt={`Thumb ${sIdx + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Quick Action Button: View Full Project Details */}
+              <button
+                onClick={() => {
+                  const targetProj = lightboxProject;
+                  closeLightbox();
+                  setSelectedProject(targetProj);
+                }}
+                className="btn btn-sm btn-custom-primary rounded-pill px-4 py-2"
+              >
+                <span>View Full Project Details</span>
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
     </section>
   );
 }
