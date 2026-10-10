@@ -63,8 +63,9 @@ function AdminDashboard() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newSkillInput, setNewSkillInput] = useState({});
 
-  // Upload Progress
+  // Upload Progress & Project Slide Inputs
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [newProjectSlideUrl, setNewProjectSlideUrl] = useState('');
 
   useEffect(() => {
     checkAuthenticationAndFetch();
@@ -134,11 +135,19 @@ function AdminDashboard() {
     e.preventDefault();
     setSaving(true);
     try {
+      const slides = Array.isArray(editingProject.slides) ? editingProject.slides : [];
+      const primaryImage = slides.length > 0 ? slides[0] : (editingProject.image || '');
+      const projectToSave = {
+        ...editingProject,
+        slides,
+        image: primaryImage
+      };
+
       if (editingProject.id) {
-        await api.updateProject(editingProject.id, editingProject);
+        await api.updateProject(editingProject.id, projectToSave);
         showBanner('success', 'Project updated successfully!');
       } else {
-        await api.createProject(editingProject);
+        await api.createProject(projectToSave);
         showBanner('success', 'Project created successfully!');
       }
       setEditingProject(null);
@@ -148,6 +157,90 @@ function AdminDashboard() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleStartEditProject = (proj) => {
+    const slides = Array.isArray(proj.slides) && proj.slides.length > 0
+      ? proj.slides
+      : (proj.image ? [proj.image] : []);
+    setEditingProject({
+      ...proj,
+      slides,
+      image: slides[0] || proj.image || ''
+    });
+  };
+
+  const handleAddProjectSlideUrl = () => {
+    if (!newProjectSlideUrl.trim() || !editingProject) return;
+    const url = newProjectSlideUrl.trim();
+    const currentSlides = Array.isArray(editingProject.slides)
+      ? editingProject.slides
+      : (editingProject.image ? [editingProject.image] : []);
+    const updated = [...currentSlides, url];
+    setEditingProject({
+      ...editingProject,
+      slides: updated,
+      image: updated[0] || ''
+    });
+    setNewProjectSlideUrl('');
+    showBanner('success', 'Image URL added to project slides!');
+  };
+
+  const handleMultipleProjectImageUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0 || !editingProject) return;
+
+    setUploadingImage(true);
+    try {
+      const urls = [];
+      for (const file of files) {
+        const res = await api.uploadFile(file);
+        if (res && res.url) {
+          urls.push(res.url);
+        }
+      }
+      if (urls.length > 0) {
+        const currentSlides = Array.isArray(editingProject.slides)
+          ? editingProject.slides
+          : (editingProject.image ? [editingProject.image] : []);
+        const updated = [...currentSlides, ...urls];
+        setEditingProject((prev) => ({
+          ...prev,
+          slides: updated,
+          image: updated[0] || prev?.image || ''
+        }));
+        showBanner('success', `${urls.length} image(s) uploaded successfully!`);
+      }
+    } catch (err) {
+      showBanner('error', err.message || 'File upload failed');
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveProjectSlide = (indexToRemove) => {
+    if (!editingProject) return;
+    const currentSlides = Array.isArray(editingProject.slides) ? editingProject.slides : [];
+    const updated = currentSlides.filter((_, idx) => idx !== indexToRemove);
+    setEditingProject({
+      ...editingProject,
+      slides: updated,
+      image: updated[0] || ''
+    });
+  };
+
+  const handleSetCoverProjectSlide = (index) => {
+    if (!editingProject) return;
+    const currentSlides = Array.isArray(editingProject.slides) ? [...editingProject.slides] : [];
+    if (index <= 0 || index >= currentSlides.length) return;
+    const [selected] = currentSlides.splice(index, 1);
+    currentSlides.unshift(selected);
+    setEditingProject({
+      ...editingProject,
+      slides: currentSlides,
+      image: currentSlides[0]
+    });
   };
 
   const handleDeleteProject = async (id) => {
@@ -631,7 +724,7 @@ function AdminDashboard() {
                       </td>
                       <td>
                         <div className={styles.actionRow}>
-                          <button onClick={() => setEditingProject(proj)} className={styles.editBtn}>
+                          <button onClick={() => handleStartEditProject(proj)} className={styles.editBtn}>
                             <Edit size={16} />
                           </button>
                           <button onClick={() => handleDeleteProject(proj.id)} className={styles.deleteBtn}>
@@ -691,11 +784,16 @@ function AdminDashboard() {
                     <div className={styles.fieldGroup}>
                       <label>Detailed Overview & Architecture</label>
                       <textarea
-                        rows="3"
+                        rows="6"
                         value={editingProject.detailedDescription}
                         onChange={(e) => setEditingProject({ ...editingProject, detailedDescription: e.target.value })}
                         className={styles.textarea}
+                        placeholder="Paste your architecture notes, pipeline steps, or paragraph line-by-line. Line breaks and indentation will be preserved."
+                        style={{ minHeight: '130px', whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}
                       ></textarea>
+                      <small style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '4px' }}>
+                        💡 Line breaks and bullet formatting are preserved and rendered line-by-line on your portfolio.
+                      </small>
                     </div>
 
                     <div className={styles.fieldGroup}>
@@ -717,33 +815,194 @@ function AdminDashboard() {
                       />
                     </div>
 
-                    {/* Image Upload */}
+                    {/* Multi-Image Gallery Manager */}
                     <div className={styles.fieldGroup}>
-                      <label>Cover Image</label>
-                      <div className={styles.uploadRow}>
-                        <input
-                          type="text"
-                          value={editingProject.image || ''}
-                          onChange={(e) => setEditingProject({ ...editingProject, image: e.target.value })}
-                          placeholder="Image URL or upload"
-                          className={styles.input}
-                        />
-                        <label className={styles.uploadBtn}>
-                          <Upload size={16} />
-                          <span>{uploadingImage ? 'Uploading...' : 'Upload'}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) =>
-                              handleImageUpload(e, (url) => setEditingProject({ ...editingProject, image: url }))
-                            }
-                            style={{ display: 'none' }}
-                          />
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <label style={{ margin: 0, fontWeight: '700' }}>
+                          Project Images & Screenshots ({editingProject.slides?.length || 0})
                         </label>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          Add as many images as you wish
+                        </span>
                       </div>
-                      {editingProject.image && (
-                        <div className={styles.imagePreviewWrapper}>
-                          <img src={editingProject.image} alt="Preview" className={styles.imagePreview} />
+
+                      {/* Upload and URL input controls */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <label className={styles.uploadBtn} style={{ cursor: uploadingImage ? 'wait' : 'pointer' }}>
+                            <Upload size={16} />
+                            <span>{uploadingImage ? 'Uploading Image(s)...' : 'Upload Images (Select Multiple)'}</span>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              disabled={uploadingImage}
+                              onChange={handleMultipleProjectImageUpload}
+                              style={{ display: 'none' }}
+                            />
+                          </label>
+
+                          <div style={{ display: 'flex', flex: '1', minWidth: '220px', gap: '6px' }}>
+                            <input
+                              type="text"
+                              value={newProjectSlideUrl}
+                              onChange={(e) => setNewProjectSlideUrl(e.target.value)}
+                              placeholder="Or paste image URL here..."
+                              className={styles.input}
+                              style={{ flex: 1 }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleAddProjectSlideUrl();
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleAddProjectSlideUrl}
+                              className={styles.uploadBtn}
+                              style={{ padding: '0.75rem 1rem' }}
+                            >
+                              <Plus size={16} />
+                              <span>Add URL</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <small style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                          💡 The first image serves as the main Cover. Click &quot;Make Cover&quot; on any image to set it as primary. All images will be interactive in the website carousel &amp; zoom lightbox.
+                        </small>
+                      </div>
+
+                      {/* Thumbnail Gallery Grid */}
+                      {Array.isArray(editingProject.slides) && editingProject.slides.length > 0 ? (
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                            gap: '12px',
+                            marginTop: '12px',
+                            padding: '10px',
+                            backgroundColor: 'var(--bg-card)',
+                            borderRadius: '12px',
+                            border: '1px solid var(--border-color)',
+                            maxHeight: '260px',
+                            overflowY: 'auto'
+                          }}
+                        >
+                          {editingProject.slides.map((slideUrl, sIdx) => (
+                            <div
+                              key={sIdx}
+                              style={{
+                                position: 'relative',
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                border: sIdx === 0 ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                                backgroundColor: 'var(--bg-secondary)',
+                                display: 'flex',
+                                flexDirection: 'column'
+                              }}
+                            >
+                              <div style={{ position: 'relative', height: '80px', width: '100%' }}>
+                                <img
+                                  src={slideUrl}
+                                  alt={`Slide ${sIdx + 1}`}
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                                {sIdx === 0 ? (
+                                  <span
+                                    style={{
+                                      position: 'absolute',
+                                      top: '4px',
+                                      left: '4px',
+                                      fontSize: '0.65rem',
+                                      fontWeight: '700',
+                                      backgroundColor: 'var(--accent-primary)',
+                                      color: '#ffffff',
+                                      padding: '2px 6px',
+                                      borderRadius: '4px'
+                                    }}
+                                  >
+                                    Cover
+                                  </span>
+                                ) : (
+                                  <span
+                                    style={{
+                                      position: 'absolute',
+                                      top: '4px',
+                                      left: '4px',
+                                      fontSize: '0.65rem',
+                                      fontWeight: '600',
+                                      backgroundColor: 'rgba(0,0,0,0.65)',
+                                      color: '#ffffff',
+                                      padding: '2px 5px',
+                                      borderRadius: '4px'
+                                    }}
+                                  >
+                                    #{sIdx + 1}
+                                  </span>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveProjectSlide(sIdx)}
+                                  title="Delete screenshot"
+                                  style={{
+                                    position: 'absolute',
+                                    top: '4px',
+                                    right: '4px',
+                                    width: '22px',
+                                    height: '22px',
+                                    borderRadius: '50%',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.85)',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    padding: 0
+                                  }}
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+
+                              {sIdx !== 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetCoverProjectSlide(sIdx)}
+                                  style={{
+                                    fontSize: '0.7rem',
+                                    padding: '4px 6px',
+                                    border: 'none',
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--accent-primary)',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    textAlign: 'center',
+                                    borderTop: '1px solid var(--border-color)'
+                                  }}
+                                >
+                                  Make Cover
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            padding: '16px',
+                            textAlign: 'center',
+                            borderRadius: '10px',
+                            border: '1px dashed var(--border-color)',
+                            color: 'var(--text-muted)',
+                            fontSize: '0.85rem',
+                            marginTop: '8px'
+                          }}
+                        >
+                          No screenshots added yet. Upload files or enter image URLs above.
                         </div>
                       )}
                     </div>
