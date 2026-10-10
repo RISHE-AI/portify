@@ -189,10 +189,10 @@ function Projects({ projects = [] }) {
                 <div className="card glass-card h-100 border-0 overflow-hidden d-flex flex-column">
                   {/* Card Image Banner with Mini Slide Controls, Finger Swipe & Click to Expand */}
                   <div
-                    className="position-relative overflow-hidden user-select-none"
+                    className="position-relative overflow-hidden user-select-none d-flex align-items-center justify-content-center"
                     style={{
                       height: '210px',
-                      backgroundColor: 'var(--bg-secondary)',
+                      backgroundColor: 'rgba(0, 0, 0, 0.45)',
                       touchAction: 'pan-y',
                       cursor: 'pointer'
                     }}
@@ -202,11 +202,36 @@ function Projects({ projects = [] }) {
                     onTouchEnd={() => handleTouchEnd(proj.id, slides.length)}
                     title="Click to view image in full-screen carousel"
                   >
+                    {/* Ambient subtle blurred backdrop */}
+                    <img
+                      src={slides[activeSlideIdx]}
+                      alt=""
+                      aria-hidden="true"
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        filter: 'blur(20px) brightness(0.35)',
+                        transform: 'scale(1.2)',
+                        opacity: 0.55,
+                        pointerEvents: 'none'
+                      }}
+                    />
+
+                    {/* True Real-Size Uncropped Foreground Image */}
                     <img
                       src={slides[activeSlideIdx]}
                       alt={`${proj.title} slide ${activeSlideIdx + 1}`}
-                      className="w-100 h-100 object-fit-cover"
-                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+                      className="position-relative w-100 h-100"
+                      style={{
+                        objectFit: 'contain',
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                        padding: '6px'
+                      }}
                       draggable={false}
                     />
 
@@ -447,9 +472,10 @@ function Projects({ projects = [] }) {
             </h2>
 
             <div
-              className="rounded-3 overflow-hidden mb-3 user-select-none position-relative"
+              className="rounded-3 overflow-hidden mb-3 user-select-none position-relative d-flex align-items-center justify-content-center"
               style={{
-                height: '240px',
+                height: '250px',
+                backgroundColor: 'rgba(0, 0, 0, 0.45)',
                 touchAction: 'pan-y',
                 cursor: 'pointer'
               }}
@@ -462,11 +488,36 @@ function Projects({ projects = [] }) {
               onTouchEnd={() => handleTouchEnd(selectedProject.id, getProjectSlides(selectedProject).length)}
               title="Click to view full-screen image carousel"
             >
+              {/* Ambient blurred backdrop */}
+              <img
+                src={getProjectSlides(selectedProject)[cardImageIndices[selectedProject.id] || 0]}
+                alt=""
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  filter: 'blur(22px) brightness(0.35)',
+                  transform: 'scale(1.2)',
+                  opacity: 0.55,
+                  pointerEvents: 'none'
+                }}
+              />
+
+              {/* Real uncropped image */}
               <img
                 src={getProjectSlides(selectedProject)[cardImageIndices[selectedProject.id] || 0]}
                 alt={selectedProject.title}
-                className="w-100 h-100 object-fit-cover"
-                style={{ pointerEvents: 'none', userSelect: 'none' }}
+                className="position-relative w-100 h-100"
+                style={{
+                  objectFit: 'contain',
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                  padding: '6px'
+                }}
                 draggable={false}
               />
               <span

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Briefcase, GraduationCap, Calendar, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Briefcase, GraduationCap, Calendar, MapPin, ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 import travelImg from '../assets/travel.png';
 import portfolioImg from '../assets/portfolio.png';
 
@@ -7,6 +7,12 @@ function ExperienceEducation({ experience = [], education = [] }) {
   const [expImageIndices, setExpImageIndices] = useState({});
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchCurrentX, setTouchCurrentX] = useState(0);
+
+  // Lightbox Modal state for full-screen uncropped view
+  const [expLightbox, setExpLightbox] = useState(null);
+  const [expLightboxIndex, setExpLightboxIndex] = useState(0);
+  const [lightboxTouchStartX, setLightboxTouchStartX] = useState(0);
+  const [lightboxTouchCurrentX, setLightboxTouchCurrentX] = useState(0);
 
   const defaultExperience = [
     {
@@ -56,6 +62,39 @@ function ExperienceEducation({ experience = [], education = [] }) {
     if (exp.image) return [exp.image];
     return [travelImg, portfolioImg];
   };
+
+  const openExpLightbox = (exp, slideIndex = 0) => {
+    setExpLightbox(exp);
+    setExpLightboxIndex(slideIndex);
+  };
+
+  const closeExpLightbox = () => {
+    setExpLightbox(null);
+  };
+
+  const handleExpLightboxNext = () => {
+    if (!expLightbox) return;
+    const slides = getExpSlides(expLightbox);
+    setExpLightboxIndex((prev) => (prev + 1) % slides.length);
+  };
+
+  const handleExpLightboxPrev = () => {
+    if (!expLightbox) return;
+    const slides = getExpSlides(expLightbox);
+    setExpLightboxIndex((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  // Keyboard navigation for Experience Lightbox
+  useEffect(() => {
+    if (!expLightbox) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') closeExpLightbox();
+      if (e.key === 'ArrowRight') handleExpLightboxNext();
+      if (e.key === 'ArrowLeft') handleExpLightboxPrev();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [expLightbox]);
 
   const handleNextExpImage = (e, expId, slideLength) => {
     if (e && e.stopPropagation) e.stopPropagation();
@@ -132,36 +171,85 @@ function ExperienceEducation({ experience = [], education = [] }) {
                     {/* Work Experience Image Carousel Banner */}
                     {slides.length > 0 && (
                       <div
-                        className="position-relative overflow-hidden user-select-none"
+                        className="position-relative overflow-hidden user-select-none d-flex align-items-center justify-content-center"
                         style={{
                           height: '250px',
-                          backgroundColor: 'var(--bg-secondary)',
+                          backgroundColor: 'rgba(0, 0, 0, 0.45)',
                           touchAction: 'pan-y',
-                          cursor: slides.length > 1 ? 'grab' : 'default'
+                          cursor: 'pointer'
                         }}
+                        onClick={() => openExpLightbox(exp, activeSlideIdx)}
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
                         onTouchEnd={() => handleTouchEnd(exp.id, slides.length)}
+                        title="Click to view image in full-screen"
                       >
+                        {/* Ambient subtle blurred backdrop */}
+                        <img
+                          src={slides[activeSlideIdx]}
+                          alt=""
+                          aria-hidden="true"
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            filter: 'blur(20px) brightness(0.35)',
+                            transform: 'scale(1.2)',
+                            opacity: 0.55,
+                            pointerEvents: 'none'
+                          }}
+                        />
+
+                        {/* True Real-Size Uncropped Foreground Image */}
                         <img
                           src={slides[activeSlideIdx]}
                           alt={`${exp.role} work preview`}
-                          className="w-100 h-100 object-fit-cover"
-                          style={{ pointerEvents: 'none', userSelect: 'none' }}
+                          className="position-relative w-100 h-100"
+                          style={{
+                            objectFit: 'contain',
+                            pointerEvents: 'none',
+                            userSelect: 'none',
+                            padding: '6px'
+                          }}
                           draggable={false}
                         />
+
+                        {/* Expand Pill */}
+                        <span
+                          className="position-absolute d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 small"
+                          style={{
+                            bottom: '10px',
+                            right: '10px',
+                            backgroundColor: 'rgba(0, 0, 0, 0.72)',
+                            backdropFilter: 'blur(6px)',
+                            color: '#ffffff',
+                            fontSize: '0.72rem',
+                            pointerEvents: 'none',
+                            zIndex: 2
+                          }}
+                        >
+                          <Maximize2 size={12} />
+                          <span>{slides.length > 1 ? `${slides.length} Photos` : 'Expand'}</span>
+                        </span>
 
                         {/* Slide Navigation Controls */}
                         {slides.length > 1 && (
                           <>
                             <button
-                              onClick={(e) => handlePrevExpImage(e, exp.id, slides.length)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePrevExpImage(e, exp.id, slides.length);
+                              }}
                               className="btn position-absolute top-50 start-0 translate-middle-y d-flex align-items-center justify-content-center p-0 rounded-circle ms-2"
                               style={{
                                 width: '32px',
                                 height: '32px',
                                 backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                                color: '#ffffff'
+                                color: '#ffffff',
+                                zIndex: 3
                               }}
                               aria-label="Previous work screenshot"
                             >
@@ -169,20 +257,28 @@ function ExperienceEducation({ experience = [], education = [] }) {
                             </button>
 
                             <button
-                              onClick={(e) => handleNextExpImage(e, exp.id, slides.length)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleNextExpImage(e, exp.id, slides.length);
+                              }}
                               className="btn position-absolute top-50 end-0 translate-middle-y d-flex align-items-center justify-content-center p-0 rounded-circle me-2"
                               style={{
                                 width: '32px',
                                 height: '32px',
                                 backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                                color: '#ffffff'
+                                color: '#ffffff',
+                                zIndex: 3
                               }}
                               aria-label="Next work screenshot"
                             >
                               <ChevronRight size={18} />
                             </button>
 
-                            <div className="position-absolute bottom-0 start-50 translate-middle-x d-flex gap-1 mb-3">
+                            <div
+                              className="position-absolute bottom-0 start-50 translate-middle-x d-flex gap-1 mb-2"
+                              style={{ zIndex: 3 }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               {slides.map((_, sIdx) => (
                                 <span
                                   key={sIdx}
@@ -191,7 +287,12 @@ function ExperienceEducation({ experience = [], education = [] }) {
                                     height: '7px',
                                     borderRadius: sIdx === activeSlideIdx ? '4px' : '50%',
                                     backgroundColor: sIdx === activeSlideIdx ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
-                                    transition: 'all 0.2s ease'
+                                    transition: 'all 0.2s ease',
+                                    cursor: 'pointer'
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpImageIndices((prev) => ({ ...prev, [exp.id]: sIdx }));
                                   }}
                                 />
                               ))}
@@ -311,6 +412,172 @@ function ExperienceEducation({ experience = [], education = [] }) {
           </div>
         </div>
       </div>
+
+      {/* Experience Image Lightbox Modal */}
+      {expLightbox && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-between p-3 animate-fade-in"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.94)',
+            backdropFilter: 'blur(12px)',
+            zIndex: 3000,
+            userSelect: 'none'
+          }}
+          onClick={closeExpLightbox}
+        >
+          {/* Header */}
+          <div
+            className="w-100 d-flex align-items-center justify-content-between px-3 py-2"
+            style={{ maxWidth: '1100px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <span
+                className="badge rounded-pill px-2 py-1 text-uppercase me-2"
+                style={{ backgroundColor: 'var(--accent-primary)', color: '#ffffff', fontSize: '0.72rem' }}
+              >
+                Experience
+              </span>
+              <span className="text-white fw-bold">{expLightbox.role}</span>
+              <span className="text-white-50 ms-2 small">({expLightbox.company})</span>
+            </div>
+
+            <div className="d-flex align-items-center gap-3">
+              <span className="small text-white-50 fw-semibold">
+                {expLightboxIndex + 1} / {getExpSlides(expLightbox).length}
+              </span>
+              <button
+                className="btn btn-outline-light rounded-circle p-2 d-flex align-items-center justify-content-center"
+                style={{ width: '38px', height: '38px', borderColor: 'rgba(255,255,255,0.3)' }}
+                onClick={closeExpLightbox}
+                aria-label="Close lightbox"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Main Stage Image */}
+          <div
+            className="position-relative w-100 d-flex align-items-center justify-content-center flex-grow-1 my-2 overflow-hidden"
+            style={{ maxWidth: '1100px', maxHeight: '76vh', touchAction: 'pan-y' }}
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => {
+              if (e.touches && e.touches.length > 0) {
+                setLightboxTouchStartX(e.touches[0].clientX);
+                setLightboxTouchCurrentX(e.touches[0].clientX);
+              }
+            }}
+            onTouchMove={(e) => {
+              if (e.touches && e.touches.length > 0) {
+                setLightboxTouchCurrentX(e.touches[0].clientX);
+              }
+            }}
+            onTouchEnd={() => {
+              const deltaX = lightboxTouchStartX - lightboxTouchCurrentX;
+              const slides = getExpSlides(expLightbox);
+              if (deltaX > 40 && slides.length > 1) {
+                handleExpLightboxNext();
+              } else if (deltaX < -40 && slides.length > 1) {
+                handleExpLightboxPrev();
+              }
+              setLightboxTouchStartX(0);
+              setLightboxTouchCurrentX(0);
+            }}
+          >
+            <img
+              src={getExpSlides(expLightbox)[expLightboxIndex]}
+              alt={`${expLightbox.role} screenshot ${expLightboxIndex + 1}`}
+              className="img-fluid rounded-3 shadow-lg"
+              style={{
+                maxHeight: '74vh',
+                maxWidth: '92vw',
+                objectFit: 'contain',
+                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)'
+              }}
+              draggable={false}
+            />
+
+            {/* Left Chevron */}
+            {getExpSlides(expLightbox).length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExpLightboxPrev();
+                }}
+                className="btn position-absolute top-50 start-0 translate-middle-y rounded-circle d-flex align-items-center justify-content-center ms-2 ms-md-4 shadow"
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: '#ffffff'
+                }}
+                aria-label="Previous screenshot"
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
+
+            {/* Right Chevron */}
+            {getExpSlides(expLightbox).length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExpLightboxNext();
+                }}
+                className="btn position-absolute top-50 end-0 translate-middle-y rounded-circle d-flex align-items-center justify-content-center me-2 me-md-4 shadow"
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: '#ffffff'
+                }}
+                aria-label="Next screenshot"
+              >
+                <ChevronRight size={24} />
+              </button>
+            )}
+          </div>
+
+          {/* Footer Thumbnail Strip */}
+          <div
+            className="w-100 d-flex flex-column align-items-center gap-2 pb-2"
+            style={{ maxWidth: '1100px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {getExpSlides(expLightbox).length > 1 && (
+              <div
+                className="d-flex align-items-center gap-2 overflow-x-auto py-2 px-3 rounded-pill"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  maxWidth: '90vw',
+                  scrollbarWidth: 'none'
+                }}
+              >
+                {getExpSlides(expLightbox).map((slideUrl, sIdx) => (
+                  <button
+                    key={sIdx}
+                    onClick={() => setExpLightboxIndex(sIdx)}
+                    className="p-0 border-0 rounded overflow-hidden"
+                    style={{
+                      width: '48px',
+                      height: '36px',
+                      opacity: expLightboxIndex === sIdx ? 1 : 0.45,
+                      outline: expLightboxIndex === sIdx ? '2px solid var(--accent-primary)' : 'none',
+                      transition: 'all 0.2s ease',
+                      flexShrink: 0
+                    }}
+                  >
+                    <img src={slideUrl} alt={`Thumb ${sIdx + 1}`} className="w-100 h-100 object-fit-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
